@@ -1,0 +1,21 @@
+server:
+  version: 1.0
+  host: localhost
+  port: :4000
+
+mysql:
+  host: localhost
+  port: 3306
+  username: root
+  password: root
+  database: education
+  charset: utf8mb4
+
+neo4j:
+  host: localhost
+  port: 7687
+  username: neo4j
+  password: password
+
+python:
+  baseurl: http://python-analytics:8000
