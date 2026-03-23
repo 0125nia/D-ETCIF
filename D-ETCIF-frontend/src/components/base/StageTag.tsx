@@ -1,4 +1,4 @@
-import { useGlobalStore } from "@/store/useGlobalStore";
+import { useGlobalStore } from "@/store/global.store";
 const StageTag = () => {
   const { userInfo, currentStage } = useGlobalStore();
 

@@ -1,4 +1,4 @@
-import { useGlobalStore } from "@/store/useGlobalStore";
+import { useGlobalStore } from "@/store/global.store";
 import type { StudentNav, TeacherNav, ActiveNav } from "@/types/domain/global";
 import { useNavigate } from "react-router-dom";
 import StageTag from "./StageTag";
@@ -19,6 +19,7 @@ const TopNav = () => {
   const teacherNav: { key: TeacherNav; label: string }[] = [
     { key: "dashboard", label: "教学看板" },
     { key: "helpManage", label: "求助管理" },
+    { key: "correct", label: "实验批改" },
   ];
 
   const navList = role === "student" ? studentNav : teacherNav;
@@ -30,6 +31,7 @@ const TopNav = () => {
     help: "", // 学生求助通过弹窗，不跳转路由
     dashboard: "/teacher/dashboard",
     helpManage: "/teacher/help",
+    correct: "/teacher/correct",
   };
 
   const handleClick = (key: ActiveNav) => {
@@ -46,6 +48,9 @@ const TopNav = () => {
 
   return (
     <div className="w-full h-16 bg-white border-b border-gray-200 flex items-center justify-between px-5">
+      <div className="flex items-center">
+        <span className="text-xl font-bold text-blue-600">D-ETCIF</span>
+      </div>
       <div className="flex gap-8">
         {navList.map((item) => (
           <button
