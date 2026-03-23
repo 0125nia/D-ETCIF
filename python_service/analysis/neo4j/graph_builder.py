@@ -19,54 +19,19 @@ NEO4J_CONFIG = {
     "password": NEO4J_PASSWORD
 }
 
-
-class Neo4jGraphBuilder:
+class GraphStore:
     def __init__(self):
-        self.graph = self._connect()
-        self.node_cache = {}
+        self.graph = Graph(NEO4J_CONFIG["uri"], auth=(NEO4J_CONFIG["user"], NEO4J_CONFIG["password"]))
 
-    def _connect(self):
-        try:
-            graph = Graph(
-                NEO4J_CONFIG["uri"],
-                auth=(NEO4J_CONFIG["user"], NEO4J_CONFIG["password"])
-            )
-            print("✅ Neo4j 连接成功")
-            return graph
-        except Exception as e:
-            raise Exception(f"❌ Neo4j 连接失败：{e}")
-
-    def clear(self):
-        self.graph.delete_all()
-        print("🗑️ 已清空旧图谱数据")
-
-    def _judge_type(self, name):
-        if any(k in name for k in ["错误", "不匹配", "报错", "异常"]):
-            return "常见错误"
-        elif any(k in name for k in ["导入", "创建", "准备", "绘制", "保存"]):
-            return "实验步骤"
-        elif any(k in name for k in ["规范", "禁止"]):
-            return "安全规范"
-        elif any(k in name for k in ["Matplotlib", "Seaborn", "Python"]):
-            return "库工具"
-        elif "语法" in name or "基础" in name:
-            return "前置知识"
-        else:
-            return "知识点"
-
-    def get_or_create(self, name):
-        if name in self.node_cache:
-            return self.node_cache[name]
-        typ = self._judge_type(name)
-        node = Node(typ, name=name)
-        self.graph.create(node)
-        self.node_cache[name] = node
-        return node
-
-    def build(self, triples):
-        print("\n🚀 开始构建领域知识图谱...")
-        for h, rel, t in triples:
-            h_node = self.get_or_create(h)
-            t_node = self.get_or_create(t)
-            self.graph.create(Relationship(h_node, rel, t_node))
-        print("✅ 领域知识图谱构建完成！")
+    def sync(self, data):
+        print(f"📦 正在同步 {len(data)} 条三元组至 Neo4j...")
+        for item in data:
+            h, t = item['head'], item['tail']
+            # 创建/合并节点
+            node_h = Node(h['label'], name=h['name'])
+            node_t = Node(t['label'], name=t['name'])
+            self.graph.merge(node_h, h['label'], "name")
+            self.graph.merge(node_t, t['label'], "name")
+            # 创建/合并关系
+            rel = Relationship(node_h, item['relation'], node_t)
+            self.graph.merge(rel)

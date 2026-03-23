@@ -32,3 +32,8 @@ resource
 *.ipynb_checkpoints
 *.ipynb
 ipynb
+
+__pycache__
+*.pyc
+
+domain_kg.json
