@@ -1,21 +1,23 @@
 import type { RouteObject } from "react-router-dom";
 import { Navigate } from "react-router-dom";
-import { AuthGuard } from "./AuthGuard";
+// import { AuthGuard } from "./AuthGuard";
 
-import StudentLayout from "@/layouts/StudentLayout";
-import LabPage from "@/pages/student/lab/LabPage";
-import PreStagePage from "@/pages/student/stage/PreStagePage";
-import DoingStagePage from "@/pages/student/stage/DoingStagePage";
-import PostStagePage from "@/pages/student/stage/PostStagePage";
-import FeedbackPage from "@/pages/student/feedback/FeedbackPage";
-import ProfilePage from "@/pages/student/profile/ProfilePage";
+import { StudentLayout, TeacherLayout } from "@/layouts";
 
-import TeacherLayout from "@/layouts/TeacherLayout";
-import Dashboard from "@/pages/teacher/dashborad/Dashborad";
-import HelpPage from "@/pages/teacher/help/HelpPage";
+import {
+  LabPage,
+  PreStagePage,
+  DoingStagePage,
+  PostStagePage,
+  ProfilePage,
+  FeedbackPage,
+} from "@/pages/student";
+
+import { Dashboard, Correct, HelpPage } from "@/pages/teacher";
 
 import LoginPage from "@/pages/auth/LoginPage";
-import NotFound from "@/pages/error/NotFound";
+import NotFound from "@/pages/common/NotFound";
+import Test from "@/pages/common/Test";
 
 const routes: RouteObject[] = [
   {
@@ -26,6 +28,11 @@ const routes: RouteObject[] = [
   {
     path: "/login",
     element: <LoginPage />,
+  },
+
+  {
+    path: "/test",
+    element: <Test />,
   },
 
   // student模块
@@ -42,18 +49,24 @@ const routes: RouteObject[] = [
           },
           {
             path: "lab",
-            element: <LabPage />,
             children: [
               {
-                path: ":labId/pre",
+                index: true,
+                element: <LabPage />,
+              },
+              {
+                // path: ":labId/pre",
+                path: "pre",
                 element: <PreStagePage />,
               },
               {
-                path: ":labId/doing",
+                // path: ":labId/doing",
+                path: "doing",
                 element: <DoingStagePage />,
               },
               {
-                path: ":labId/post",
+                // path: ":labId/post",
+                path: "post",
                 element: <PostStagePage />,
               },
             ],
@@ -90,6 +103,10 @@ const routes: RouteObject[] = [
           {
             path: "help",
             element: <HelpPage />,
+          },
+          {
+            path: "correct",
+            element: <Correct />,
           },
         ],
       },
