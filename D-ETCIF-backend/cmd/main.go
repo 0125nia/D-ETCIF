@@ -1,6 +1,5 @@
-// Package cmd
-// D-ETCIF-backend/cmd/main.go
-package cmd
+// Package cmd D-ETCIF-backend/cmd/main.go
+package main
 
 import (
 	config "D-ETCIF-backend/configs"

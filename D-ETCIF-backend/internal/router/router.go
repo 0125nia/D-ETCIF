@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"D-ETCIF-backend/pkg/middleware"
+	"D-ETCIF-backend/pkg/utils"
 
 	"github.com/gin-gonic/gin"
 )
@@ -15,6 +16,22 @@ func NewRouter() *gin.Engine {
 	ginRouter.Use(middleware.Cors())
 	ginRouter.GET("/", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"message": "ok"})
+	})
+
+	ginRouter.POST("/api/v1/monitor/collect", func(c *gin.Context) {
+		var log struct {
+			CellContent    string `json:"cell_content"`
+			ExecutionCount int    `json:"execution_count"`
+			Success        bool   `json:"success"`
+			Error          string `json:"error"`
+		}
+
+		if err := c.ShouldBindJSON(&log); err == nil {
+			// 存入 MySQL 或 Neo4j，用于后续的评价算法
+			utils.Infof("%+v", log)
+			utils.Infof("收到执行数据: Cell #%d, 成功: %v", log.ExecutionCount, log.Success)
+			c.JSON(200, gin.H{"status": "captured"})
+		}
 	})
 
 	api := ginRouter.Group("/api")
