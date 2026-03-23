@@ -1,7 +1,7 @@
 import { useState } from "react";
 import axios from "axios";
 import { toast } from "@/store";
-import { useGlobalStore } from "@/store/useGlobalStore";
+import { useGlobalStore } from "@/store/global.store";
 
 export default function HelpModal({
   open,
