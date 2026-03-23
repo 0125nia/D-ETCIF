@@ -1,3 +1,10 @@
+import { AsideMainLayout } from "@/layouts";
+import { PageContainer } from "@/components/common";
+import { HelpAside, HelpMain } from "@/components/teacher";
 export default function HelpPage() {
-  return <div></div>;
+  return (
+    <PageContainer title="">
+      <AsideMainLayout aside={<HelpAside />} main={<HelpMain />} />
+    </PageContainer>
+  );
 }
