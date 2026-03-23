@@ -1,0 +1,10 @@
+export { default as CongitiveMap } from "./profile/CognitiveMap";
+export { default as ResourceRecommend } from "./profile/ResourceRecommend";
+export { default as StudyReport } from "./profile/StudyReport";
+export { default as FeedbackAside } from "./feedback/FeedbackAside";
+export { default as FeedbackMain } from "./feedback/FeedbackMain";
+export { default as DoingStageLeft } from "./stage/doing/DoingStageLeft";
+export { default as DoingStageMain } from "./stage/doing/DoingStageMain";
+export { default as DoingStageRight } from "./stage/doing/DoingStageRight";
+export { default as PreStageAside } from "./stage/pre/PreStageAside";
+export { default as PreStageMain } from "./stage/pre/PreStageMain";
