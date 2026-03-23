@@ -2,7 +2,7 @@ import type { RouteObject } from "react-router-dom";
 import { Navigate } from "react-router-dom";
 import { AuthGuard } from "./AuthGuard";
 
-import StudentLayout from "@/layouts/role/StudentLayout";
+import StudentLayout from "@/layouts/StudentLayout";
 import LabPage from "@/pages/student/lab/LabPage";
 import PreStagePage from "@/pages/student/stage/PreStagePage";
 import DoingStagePage from "@/pages/student/stage/DoingStagePage";
@@ -10,7 +10,7 @@ import PostStagePage from "@/pages/student/stage/PostStagePage";
 import FeedbackPage from "@/pages/student/feedback/FeedbackPage";
 import ProfilePage from "@/pages/student/profile/ProfilePage";
 
-import TeacherLayout from "@/layouts/role/TeacherLayout";
+import TeacherLayout from "@/layouts/TeacherLayout";
 import Dashboard from "@/pages/teacher/dashborad/Dashborad";
 import HelpPage from "@/pages/teacher/help/HelpPage";
 
@@ -31,7 +31,7 @@ const routes: RouteObject[] = [
   // student模块
   {
     path: "/student",
-    element: <AuthGuard allowRole="student" />,
+    // element: <AuthGuard allowRole="student" />,
     children: [
       {
         element: <StudentLayout />,
@@ -74,7 +74,7 @@ const routes: RouteObject[] = [
   //  teacher模块
   {
     path: "/teacher",
-    element: <AuthGuard allowRole="teacher" />,
+    // element: <AuthGuard allowRole="teacher" />,
     children: [
       {
         element: <TeacherLayout />,
