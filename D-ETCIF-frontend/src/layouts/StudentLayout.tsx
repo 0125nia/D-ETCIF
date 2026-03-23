@@ -1,7 +1,6 @@
-import TopNav from "@/components/base/TopNav";
+import { TopNav, HelpModal } from "@/components/base";
 import { Outlet } from "react-router-dom";
-import { useGlobalStore } from "@/store/useGlobalStore";
-import HelpModal from "@/components/base/HelpModal";
+import { useGlobalStore } from "@/store/global.store";
 
 export default function StudentLayout() {
   const { helpModalOpen, setHelpModalOpen } = useGlobalStore();
