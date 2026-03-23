@@ -37,3 +37,4 @@ __pycache__
 *.pyc
 
 domain_kg.json
+exported_domain_kg.json
