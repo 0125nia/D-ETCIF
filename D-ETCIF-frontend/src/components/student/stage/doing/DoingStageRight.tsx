@@ -8,6 +8,10 @@ export default function DoingStageRight() {
         <div className="text-gray-500 h-full flex items-center justify-center">
           运行日志、报错信息
         </div>
+        <div className="text-gray-500 h-full flex items-center ">
+          运行日志、报错信息
+        </div>
+        
       </Card>
       {/* 执行记录 */}
       <Card title="执行记录" className="h-[200px]">

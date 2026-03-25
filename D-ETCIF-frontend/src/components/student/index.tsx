@@ -8,3 +8,6 @@ export { default as DoingStageMain } from "./stage/doing/DoingStageMain";
 export { default as DoingStageRight } from "./stage/doing/DoingStageRight";
 export { default as PreStageAside } from "./stage/pre/PreStageAside";
 export { default as PreStageMain } from "./stage/pre/PreStageMain";
+export { default as PostStageLeft } from "./stage/post/PostStageLeft";
+export { default as PostStageMain } from "./stage/post/PostStageMain";
+export { default as PostStageRight } from "./stage/post/PostStageRight";
