@@ -2,7 +2,7 @@ import { PageContainer, Card } from "@/components/common";
 
 // 模拟实验数据
 const experiments = [
-  { id: 7, name: "实验1" },
+  { id: 1, name: "第1章 数据可视化与matplotlib" ,desc: "", difficulty: ""},
   { id: 8, name: "实验2" },
   { id: 9, name: "实验3" },
   { id: 10, name: "实验4" },
@@ -16,7 +16,7 @@ export default function LabPage() {
         {experiments.map((exp) => (
           <Card
             key={exp.id}
-            title="title"
+            title={exp.name}
             // 这里可以给每个实验卡片设置特定样式或点击事件
             className=""
           >
@@ -24,10 +24,6 @@ export default function LabPage() {
               <p className="text-gray-500 text-sm">desc</p>
 
               <div className="text-sm text-gray-600">难度：difficulty</div>
-
-              <div className="text-sm text-gray-600">
-                阶段任务数：stageCount
-              </div>
 
               <button
                 onClick={() => {}}
