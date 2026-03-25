@@ -17,6 +17,9 @@ func JWTAuth() gin.HandlerFunc {
 		// 1. 获取请求头 Authorization
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
+			authHeader = c.Query("token")
+		}
+		if authHeader == "" {
 			c.JSON(http.StatusUnauthorized, gin.H{
 				"code": 401,
 				"msg":  "未提供token",
