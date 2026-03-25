@@ -1,7 +1,7 @@
 import { useState } from "react";
 import axios from "axios";
 import { toast } from "@/store";
-import { useGlobalStore } from "@/store/global.store";
+import { useExperimentStore } from "@/store";
 
 export default function HelpModal({
   open,
@@ -13,7 +13,8 @@ export default function HelpModal({
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [loading, setLoading] = useState(false);
-  const { currentExperimentId, currentStage } = useGlobalStore();
+  const { currentExperimentId, currentStage } = useExperimentStore();
+
   if (!open) return null;
 
   const handleSubmit = async () => {

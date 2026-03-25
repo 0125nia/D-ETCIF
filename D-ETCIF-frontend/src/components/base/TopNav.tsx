@@ -1,12 +1,12 @@
-import { useGlobalStore } from "@/store/global.store";
+import { useAuthStore, useUIStore } from "@/store";
 import type { StudentNav, TeacherNav, ActiveNav } from "@/types/domain/global";
 import { useNavigate } from "react-router-dom";
 import StageTag from "./StageTag";
 
 const TopNav = () => {
-  const { activeNav, setActiveNav, userInfo, setHelpModalOpen } =
-    useGlobalStore();
-  const role = userInfo.role;
+  const { activeNav, setNav, user } = useAuthStore();
+  const { setHelpModalOpen } = useUIStore();
+  const role = user.role;
   const navigate = useNavigate();
 
   const studentNav: { key: StudentNav; label: string }[] = [
@@ -35,7 +35,7 @@ const TopNav = () => {
   };
 
   const handleClick = (key: ActiveNav) => {
-    setActiveNav(key);
+    setNav(key);
 
     // ⭐ 学生求助 → 弹窗
     if (role === "student" && key === "help") {
@@ -70,7 +70,7 @@ const TopNav = () => {
       <StageTag />
 
       <div className="text-gray-800 text-sm">
-        {userInfo.id || "加载中..."} | {userInfo.name || ""}
+        {user.id || "加载中..."} | {user.name || ""}
       </div>
     </div>
   );

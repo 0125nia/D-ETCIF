@@ -1,8 +1,9 @@
-import { useGlobalStore } from "@/store/global.store";
+import { useAuthStore, useExperimentStore } from "@/store";
 const StageTag = () => {
-  const { userInfo, currentStage } = useGlobalStore();
+  const { user } = useAuthStore();
+  const { currentStage } = useExperimentStore();
 
-  if (userInfo.role === "teacher" || !currentStage) {
+  if (user.role === "teacher" || !currentStage) {
     return null;
   }
 
@@ -14,7 +15,7 @@ const StageTag = () => {
 
   return (
     <div className="inline-flex px-3 py-1 rounded-full text-sm bg-blue-50 text-blue-600 font-medium">
-      {map[currentStage]}
+      当前阶段: {map[currentStage]}
     </div>
   );
 };
