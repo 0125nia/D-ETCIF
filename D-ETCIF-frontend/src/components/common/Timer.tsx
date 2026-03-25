@@ -7,14 +7,14 @@ const SimpleBehaviorTimer: React.FC = () => {
   // 场景 1: 模拟某个异步操作或用户行为开始
   const handleActionStart = () => {
     start();
-    console.log("⏱️ 计时开始...");
+    console.log("计时开始...");
   };
 
   // 场景 2: 用户完成输入 (例如：离开输入框)
   const handleInputBlur = () => {
     const time = stop();
     if (time !== null) {
-      console.log(`✅ 行为结束 (输入完成)，耗时: ${time} ms`);
+      console.log(`行为结束 (输入完成)，耗时: ${time} ms`);
     }
   };
 

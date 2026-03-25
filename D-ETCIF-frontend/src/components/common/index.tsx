@@ -1,8 +1,6 @@
 export { default as Button } from "./Button";
 export { default as Toast } from "./Toast";
-export { default as Table } from "./Table";
 export { default as List } from "./List";
-export { default as LoadingState } from "./LoadingState";
 export { default as AnimatedPage } from "./AnimatedPage";
 export { default as PageContainer } from "./PageContainer";
 export { default as StatItem } from "./StatItem";
