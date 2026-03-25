@@ -1,24 +1,22 @@
 import { create } from "zustand";
 
 interface UIState {
-  helpOpen: boolean;
   loading: boolean;
   error: string | null;
+  helpModalOpen: boolean;
 
-  openHelp: () => void;
-  closeHelp: () => void;
+  setHelpModalOpen: (open: boolean) => void;
   setLoading: (b: boolean) => void;
   setError: (e: string | null) => void;
 }
 
 export const useUIStore = create<UIState>((set) => ({
-  helpOpen: false,
   loading: false,
   error: null,
-
-  openHelp: () => set({ helpOpen: true }),
-  closeHelp: () => set({ helpOpen: false }),
-
+  helpModalOpen: false,
+  setHelpModalOpen: (open: boolean) => set({ helpModalOpen: open }),
   setLoading: (loading) => set({ loading }),
   setError: (error) => set({ error }),
 }));
+
+export default useUIStore;
