@@ -25,6 +25,8 @@ func NewRouter() *gin.Engine {
 		api.POST("/login", controller.NewLoginController().Login)
 	}
 
+	ginRouter.GET("/ws/:studentId", controller.NewWebSocketController().HandleWebSocket)
+
 	// 需要登录态的接口
 	auth := ginRouter.Group("/api")
 	auth.Use(middleware.JWTAuth())
