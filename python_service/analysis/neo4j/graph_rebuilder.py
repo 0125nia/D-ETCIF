@@ -56,8 +56,9 @@ class GraphRebuilder:
             raw_data = json.load(f)
 
         # 执行步骤
-        self.clear_database()
-        cleaned_data = self._clean_data(raw_data)
+        # self.clear_database()
+        # cleaned_data = self._clean_data(raw_data)
+        cleaned_data = raw_data  
         
         print(f"开始同步 {len(cleaned_data)} 条优质三元组...")
         
