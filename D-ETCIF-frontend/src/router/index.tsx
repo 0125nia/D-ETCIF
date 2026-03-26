@@ -17,6 +17,7 @@ import { Dashboard, Correct, HelpPage } from "@/pages/teacher";
 
 import LoginPage from "@/pages/auth/LoginPage";
 import NotFound from "@/pages/common/NotFound";
+import KnowledgeDetailPage from "@/pages/common/KnowledgeDetailPage";
 import Test from "@/pages/common/Test";
 
 const routes: RouteObject[] = [
@@ -33,6 +34,10 @@ const routes: RouteObject[] = [
   {
     path: "/test",
     element: <Test />,
+  },
+  {
+    path: "/knowledge/:name",
+    element: <KnowledgeDetailPage />,
   },
 
   // student模块
