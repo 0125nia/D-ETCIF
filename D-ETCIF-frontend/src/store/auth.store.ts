@@ -16,8 +16,8 @@ interface AuthState {
 
 export const useAuthStore = create<AuthState>((set) => ({
   user: {
-    id: "1",
-    name: "xxx",
+    id: "22111111444",
+    name: "test",
     role: "student",
   },
   activeNav: "experiment",
