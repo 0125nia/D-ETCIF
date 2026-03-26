@@ -1,5 +1,5 @@
 // Package service
-// D-ETCIF-backend/internal/service/feedback.go
+// D-ETCIF-backend/internal/service/realtime_feedback.go
 package service
 
 import (
@@ -16,7 +16,11 @@ type CompiledRule struct {
 
 var CompiledRules []CompiledRule
 
-func InitEngine() {
+func init() {
+	initEngine()
+}
+
+func initEngine() {
 	SecurityRules := []model.Rule{
 		{
 			Name:      "Dangerous Commands",
@@ -56,7 +60,7 @@ func InitEngine() {
 	}
 }
 
-func CheckRules(env map[string]interface{}) []model.Rule {
+func checkRules(env map[string]interface{}) []model.Rule {
 	var triggered []model.Rule
 	for _, cr := range CompiledRules {
 		output, err := expr.Run(cr.Program, env)
