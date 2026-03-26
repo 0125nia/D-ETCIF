@@ -1,5 +1,6 @@
 import Card from "@/components/common/Card";
 import Button from "@/components/common/Button";
+import PostStageScore from "./PostStageScore";
 
 export default function PostStageRight() {
   return (
@@ -17,11 +18,12 @@ export default function PostStageRight() {
           </div>
           <div className="flex justify-between">
             <span>评分状态</span>
-            <span className="text-gray-500">待评分</span>
+            <span className="text-orange-600">未完成</span>
           </div>
         </div>
       </Card>
 
+      <PostStageScore />
       {/* 报告上传 */}
       <Card title="报告上传">
         <div className="space-y-4">
@@ -35,4 +37,4 @@ export default function PostStageRight() {
       </Card>
     </div>
   );
-};
+}

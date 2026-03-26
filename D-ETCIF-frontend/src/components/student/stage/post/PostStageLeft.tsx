@@ -1,33 +1,23 @@
 import Card from "@/components/common/Card";
 import List from "@/components/common/List";
+import type { PostTaskItem } from "@/types/domain/post";
 
-// 树结构数据类型（匹配你的 List 组件）
-interface TaskItem {
-  id: number;
-  title: string;
-  children?: TaskItem[];
+interface Props {
+  onItemClick: (item: PostTaskItem) => void;
 }
 
-export default function PostStageLeft() {
-  // 实验后任务树
-  const treeData: TaskItem[] = [
+export default function PostStageLeft({ onItemClick }: Props) {
+  const treeData: PostTaskItem[] = [
     {
       id: 1,
-      title: "实验总结",
-      children: [
-        { id: 11, title: "实验结论填写" },
-        { id: 12, title: "问题与反思" },
-      ],
+      title: "小测",
+      type: "exam",
     },
     {
       id: 2,
-      title: "实验报告",
-      children: [
-        { id: 21, title: "上传报告文件" },
-        { id: 22, title: "提交审核" },
-      ],
+      title: "实验总结",
+      type: "summary",
     },
-    { id: 3, title: "实验评分查看" },
   ];
 
   return (
@@ -36,11 +26,14 @@ export default function PostStageLeft() {
         data={treeData}
         defaultExpandAll
         renderItem={(item) => (
-          <div className="text-gray-700 hover:text-blue-600 cursor-pointer py-1">
+          <div
+            className="text-gray-700 hover:text-blue-600 cursor-pointer py-1 px-1 rounded"
+            onClick={() => onItemClick(item)}
+          >
             {item.title}
           </div>
         )}
       />
     </Card>
   );
-};
+}

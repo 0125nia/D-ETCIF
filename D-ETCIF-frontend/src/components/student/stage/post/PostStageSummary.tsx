@@ -1,7 +1,9 @@
+// src/components/postStage/PostStageSummary.tsx
 import Card from "@/components/common/Card";
 import Button from "@/components/common/Button";
 
-export default function PostStageMain() {
+// 实验总结内容组件
+export default function PostStageSummary() {
   return (
     <Card title="实验总结与报告编辑" className="h-full">
       <div className="space-y-4">
