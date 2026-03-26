@@ -1,6 +1,11 @@
 import { Card } from "@/components/common";
+import { useFeedbackStore } from "@/store";
+import ReactMarkdown from "react-markdown";
+
 
 export default function DoingStageRight() {
+
+  const { selectedFeedback } = useFeedbackStore();
   return (
     <>
       {/* 实时反馈列表 */}
@@ -8,9 +13,9 @@ export default function DoingStageRight() {
         <div className="text-gray-500 h-full flex items-center justify-center">
           运行日志、报错信息
         </div>
-        <div className="text-gray-500 h-full flex items-center ">
-          运行日志、报错信息
-        </div>
+        <ReactMarkdown>
+          {selectedFeedback}
+        </ReactMarkdown>
         
       </Card>
       {/* 执行记录 */}

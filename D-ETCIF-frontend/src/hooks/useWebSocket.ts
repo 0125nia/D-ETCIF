@@ -31,7 +31,7 @@ export const useWebSocket = () => {
       try {
         const res = JSON.parse(event.data);
         
-        // 匹配后端推送到 REALTIME_FEEDBACK
+        // 处理一级反馈 匹配后端推送到 REALTIME_FEEDBACK
         if (res.type === 'REALTIME_FEEDBACK') {
           res.data.forEach((alert: any) => {
             // A. 调用你现有的 toast 逻辑展示 UI
@@ -41,6 +41,32 @@ export const useWebSocket = () => {
             setSelectedFeedback(`${alert.Name}\n${alert.Message}`);
           });
         }
+
+
+        // 处理二级反馈 (注入到侧边栏 Feedback)
+        if (res.type === 'STRATEGY_FEEDBACK') {
+            const { title, content, code_snippet,knowledge_link } = res.data;
+            
+            // 1. 弹出轻量提醒
+            toast.warning("收到一条新的思路引导，请查看右侧面板");
+
+            // 2. 适配你的 FeedbackStore：更新当前选中的反馈内容
+            const { setSelectedFeedback } = useFeedbackStore.getState();
+            const displayContent = `
+                ### ${title}
+                ${content}
+
+                \`\`\`python
+                ${code_snippet}
+                \`\`\`
+                > **知识点关联：** [点击查看详情](${knowledge_link})
+                    `;
+            setSelectedFeedback(displayContent);
+        }
+
+
+
+        
       } catch (err) {
         console.error("WS Message Parse Error", err);
       }
