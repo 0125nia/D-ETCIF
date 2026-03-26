@@ -69,9 +69,18 @@ const TopNav = () => {
 
       <StageTag />
 
+        <div className="flex items-center gap-2">
       <div className="text-gray-800 text-sm">
         {user.id || "加载中..."} | {user.name || ""}
       </div>
+      <div className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center border border-gray-200">
+          <img 
+            src="/profile.png" 
+            alt="头像" 
+            className="w-5 h-5 object-contain" 
+          />
+        </div>
+        </div>
     </div>
   );
 };
