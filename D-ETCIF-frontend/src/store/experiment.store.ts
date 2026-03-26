@@ -1,6 +1,10 @@
 import { create } from "zustand";
 import type { Stage } from "@/types/domain/global";
-import { trackPreEvent, trackMidEvent, trackPostEvent } from "@/services/tracker";
+import {
+  trackPreEvent,
+  trackMidEvent,
+  trackPostEvent,
+} from "@/services/tracker";
 
 interface ExperimentState {
   currentExperimentId: number | null;
@@ -13,12 +17,12 @@ interface ExperimentState {
 
 export const useExperimentStore = create<ExperimentState>((set, get) => ({
   currentExperimentId: 1,
-  currentStage: "PRE",
+  currentStage: "DOING",
 
   enterExperiment: (id) => {
     set({
       currentExperimentId: id,
-      currentStage: "PRE",
+      currentStage: "POST",
     });
     // 预习埋点：进入实验
     trackPreEvent({
