@@ -1,9 +1,17 @@
+import { useEffect } from "react";
 import PageContainer from "@/components/common/PageContainer";
 import CognitiveMap from "@/components/student/profile/CognitiveMap";
 import ResourceRecommend from "@/components/student/profile/ResourceRecommend";
 import StudyReport from "@/components/student/profile/StudyReport";
+import { useProfileStore } from "@/store/profile.store";
 
 export default function ProfilePage() {
+  const fetchProfileData = useProfileStore((s) => s.fetchProfileData);
+
+  useEffect(() => {
+    fetchProfileData();
+  }, [fetchProfileData]);
+
   return (
     <PageContainer>
       <h1 className="text-2xl font-bold mb-6 text-gray-800">个人中心</h1>

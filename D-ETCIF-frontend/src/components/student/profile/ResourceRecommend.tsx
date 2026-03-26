@@ -1,31 +1,30 @@
-import List from "@/components/common/List";
-import Card from "@/components/common/Card";
+import {List,Card} from "@/components/common";
+import { useProfileStore } from "@/store/profile.store";
 
-interface Resource {
-  id: number;
-  name: string;
-}
+
 
 const ResourceRecommend = () => {
-  const resources: Resource[] = [
-    { id: 1, name: "React 高级技巧教程" },
-    { id: 2, name: "TypeScript 实战项目" },
-    { id: 3, name: "前端性能优化指南" },
-    { id: 4, name: "算法刷题模板" },
-    { id: 5, name: "算法刷题模板" },
-    { id: 6, name: "算法刷题模板" },
-    { id: 7, name: "算法刷题模板" },
-  ];
+
+  const { resourceRecommendations } = useProfileStore();
 
   return (
     <Card title="推荐资源" className="flex-1">
       {/* 使用通用列表 */}
       <List
-        data={resources}
+        data={resourceRecommendations}
         renderItem={(item) => (
-          <div className="p-3 border border-gray-200 rounded-lg hover:bg-blue-50 cursor-pointer transition-colors">
-            {item.name}
-          </div>
+          <a
+            key={item.id}
+            href={item.link}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block p-4 border border-gray-200 rounded-lg hover:bg-blue-50 hover:border-blue-300 cursor-pointer transition-all"
+          >
+            {/* 资源标题 */}
+            <div className="font-medium text-gray-800 mb-1">{item.name}</div>
+            {/* 资源链接
+            <div className="text-xs text-blue-500 truncate">{item.link}</div> */}
+          </a>
         )}
       />
     </Card>
