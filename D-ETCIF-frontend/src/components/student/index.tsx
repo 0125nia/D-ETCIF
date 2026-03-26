@@ -11,3 +11,5 @@ export { default as PreStageMain } from "./stage/pre/PreStageMain";
 export { default as PostStageLeft } from "./stage/post/PostStageLeft";
 export { default as PostStageMain } from "./stage/post/PostStageMain";
 export { default as PostStageRight } from "./stage/post/PostStageRight";
+export { default as PostStageSummary } from "./stage/post/PostStageSummary";
+export { default as PostStageExam } from "./stage/post/PostStageExam";
