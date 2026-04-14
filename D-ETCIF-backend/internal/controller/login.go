@@ -1,3 +1,5 @@
+// Package controller
+// D-ETCIF-backend/internal/controller/login.go
 package controller
 
 import (
@@ -25,6 +27,11 @@ type LoginRequest struct {
 	Username string `json:"username" binding:"required"`
 	Password string `json:"password" binding:"required"`
 	Role     string `json:"role" binding:"required"` // student/teacher
+}
+
+type LoginResponse struct {
+	Token string `json:"token"`
+	User model.User `json:"user"`
 }
 
 func (lc *LoginController) Login(c *gin.Context) {
@@ -67,14 +74,14 @@ func (lc *LoginController) Login(c *gin.Context) {
 
 	utils.Info("用户登录成功，ID:", user.ID, "角色:", user.Role)
 
-	c.JSON(http.StatusOK, gin.H{
-		"token": token,
-		"user": gin.H{
-			"id":              user.ID,
-			"user_number":     user.UserNumber,
-			"name":            user.Name,
-			"role":            user.Role,
-			"cognitive_level": user.CognitiveLevel,
-		},
-	})
+	loginResp := LoginResponse{
+			Token: token,
+			User:  model.User{
+				ID:         user.ID,
+				UserNumber: user.UserNumber,
+				Name:       user.Name,
+				Role:       user.Role,
+			},
+		}
+	c.JSON(http.StatusOK, loginResp)
 }
