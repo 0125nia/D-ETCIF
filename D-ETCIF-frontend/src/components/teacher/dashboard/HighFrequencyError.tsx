@@ -1,21 +1,50 @@
-export default function HighFrequencyError() {
+// Package dashboard
+// D-ETCIF-frontend/src/components/teacher/dashboard/HighFrequencyError.tsx
+import type { HighFreqError } from "@/types/dashboard";
+
+interface Props {
+  data: HighFreqError[];
+  loading: boolean;
+}
+
+export default function HighFrequencyError({ data, loading }: Props) {
   return (
-    <div className="bg-white/80 p-4 rounded-lg border border-gray-200 flex flex-col">
-      <h3 className="text-lg font-semibold text-orange-600 mb-3">
-        高频错误点 Top
+    <div className="bg-white/80 p-4 rounded-lg border border-gray-100 flex flex-col h-full">
+      <h3 className="text-lg font-semibold text-orange-600 mb-3 text-center">
+        高频错误知识点 Top
       </h3>
       <div className="flex-1 overflow-y-auto">
-        <ul className="space-y-2">
-          <li className="p-2 border-b flex justify-between">
-            <span>第3章 - 递归算法</span>
-            <span className="text-orange-500 text-sm">错误率: 67%</span>
-          </li>
-          <li className="p-2 border-b flex justify-between">
-            <span>第5章 - 函数定义</span>
-            <span className="text-orange-500 text-sm">错误率: 52%</span>
-          </li>
-          {/* 更多数据... */}
-        </ul>
+        {loading ? (
+          <div className="space-y-2 animate-pulse">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-10 bg-gray-50 rounded" />
+            ))}
+          </div>
+        ) : data.length === 0 ? (
+          <div className="text-gray-400 text-sm text-center py-10">
+            暂无高频错误数据
+          </div>
+        ) : (
+          <ul className="divide-y divide-gray-100">
+            {data.map((item, i) => (
+              <li key={i} className="py-3 flex justify-between items-center">
+                <span className="text-gray-700 font-medium">{item.title}</span>
+                <div className="flex items-center gap-3">
+                  {/* 简单的进度条展示 */}
+                  <div className="w-24 h-2 bg-gray-100 rounded-full overflow-hidden hidden sm:block">
+                    <div
+                      className="h-full bg-orange-400"
+                      style={{ width: `${item.rate}%` }}
+                    />
+                  </div>
+                  <span className="text-orange-500 font-mono text-sm w-12 text-right">
+                    {item.rate}%
+                  </span>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
     </div>
   );
