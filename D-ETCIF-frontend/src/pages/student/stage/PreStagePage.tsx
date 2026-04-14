@@ -1,8 +1,10 @@
+// Package stage
+// D-ETCIF-frontend/src/pages/student/stage/PreStagePage.tsx
 import { useState } from "react";
 import PageContainer from "@/components/common/PageContainer";
 import { AsideMainLayout } from "@/layouts";
 import { PreStageAside, PreStageMain } from "@/components/student";
-import type { ResourceItem } from "@/types/domain/resource";
+import type { ResourceItem } from "@/types/experimentData";
 import { trackPreEvent } from "@/services/tracker";
 import { useExperimentStore } from "@/store/experiment.store";
 

@@ -1,67 +1,112 @@
+// Package lab
+// D-ETCIF-frontend/src/pages/student/lab/LabPage.tsx
 import { PageContainer, Card } from "@/components/common";
+import { useState } from "react";
+import { useExperimentStore } from "@/store/experiment.store";
+import { enterExperiment } from "@/services/experiment";
+import { useNavigate } from "react-router-dom";
+import { getExperimentList, getExperimentStages } from "@/services/experiment";
+import { useEffect } from "react";
+import type { ExperimentWithStage, Stage } from "@/types/experiment";
 
-// 模拟实验数据
-const experiments = [
-  {
-    id: 1,
-    name: "第 1 章 数据可视化与 matplotlib",
-    desc: "介绍数据可视化的基础概念、常见可视化方式与图表选择逻辑，讲解 Python 主流数据可视化库特性，重点阐述 matplotlib 的基础认知、安装方法及两种核心绘图方式，同时说明 matplotlib 绘图的图形层次结构",
-    difficulty: "入门",
-  },
-  {
-    id: 2,
-    name: "第 2 章 使用 matplotlib 绘制简单图表",
-    desc: "详细讲解 matplotlib 中各类基础图表的绘制方法，包括折线图、柱形图 / 堆积柱形图、条形图 / 堆积条形图等十余种图表，掌握各图表对应的绘图函数、参数配置及实际应用场景",
-    difficulty: "基础",
-  },
-  {
-    id: 3,
-    name: "第 3 章 图表辅助元素的定制",
-    desc: "讲解 matplotlib 图表中各类辅助元素的定制方法，包括坐标轴标签、刻度、标题、图例等，通过添加和配置辅助元素让图表更易读、信息更完整，掌握各辅助元素对应的函数与参数配置",
-    difficulty: "基础",
-  },
-  {
-    id: 4,
-    name: "第 4 章 图表样式美化",
-    desc: "讲解 matplotlib 图表的样式美化方法，包括颜色使用、线型选择、数据标记添加、字体设置、主题切换和区域填充，通过多种方式修改图表样式，提升图表的视觉效果和可读性",
-    difficulty: "基础",
-  },
-  {
-    id: 5,
-    name: "第 5 章 子图的绘制及坐标轴共享",
-    desc: "讲解 matplotlib 中多子图的绘制方法，包括固定区域和自定义区域子图，同时掌握子图的坐标轴共享方式和布局调整技巧，实现多图表在同一画布的合理展示",
-    difficulty: "中等",
-  },
-  {
-    id: 6,
-    name: "第 6 章 坐标轴的定制",
-    desc: "深入讲解 matplotlib 坐标轴的高级定制方法，包括坐标轴的结构认知、自定义添加坐标轴、刻度定制、轴脊的隐藏与移动，实现坐标轴的灵活配置以适配各类图表需求",
-    difficulty: "中等",
-  },
-];
+const difficultyMap: Record<number, string> = {
+  1: "入门",
+  2: "基础",
+  3: "中等",
+  4: "困难",
+};
+
+const stageTextMap: Record<Stage, string> = {
+  PRE: "实验前",
+  DOING: "实验中",
+  POST: "实验后",
+};
 
 export default function LabPage() {
+  const [experiments, setExperiments] = useState<ExperimentWithStage[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const navigate = useNavigate();
+  // 全局状态
+  const { enterExperiment: storeEnter } = useExperimentStore();
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        // 同时请求两个接口（最符合你需求）
+        const [expData, stageData] = await Promise.all([
+          getExperimentList(),
+          getExperimentStages(),
+        ]);
+        const expList = expData.data;
+        const stageList = stageData;
+
+        // 合并数据 → 只用于展示，不存多余状态
+        const merged = expList.map((exp) => {
+          const stageItem = stageList.find(
+            (s) => s.experiment_id === exp.experiment_id,
+          );
+          return {
+            ...exp,
+            stage: stageItem?.current_stage || "PRE",
+          };
+        });
+
+        setExperiments(merged);
+      } catch (err) {
+        console.error("加载实验失败", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, []);
+
+  const handleEnter = async (exp: ExperimentWithStage) => {
+    try {
+      // 1. 调用 enter 接口
+      await enterExperiment(exp.experiment_id);
+
+      // 2. 更新全局状态
+      storeEnter(exp.experiment_id);
+
+      // 3. 根据当前阶段 → 跳对应页面
+      if (exp.stage === "PRE") {
+        navigate(`/lab/pre/${exp.experiment_id}`);
+      } else if (exp.stage === "DOING") {
+        navigate(`/lab/doing/${exp.experiment_id}`);
+      } else if (exp.stage === "POST") {
+        navigate(`/lab/post/${exp.experiment_id}`);
+      }
+    } catch (err) {
+      console.error("进入实验失败", err);
+    }
+  };
+
+  if (loading) {
+    return <PageContainer title="">加载实验中...</PageContainer>;
+  }
+
   return (
-    <PageContainer title="">
+    <PageContainer title="实验列表">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* 遍历数据生成卡片 */}
         {experiments.map((exp) => (
-          <Card
-            key={exp.id}
-            title={exp.name}
-            // 这里可以给每个实验卡片设置特定样式或点击事件
-            className=""
-          >
-            <div className="bg-white rounded-xl p-5 flex flex-col gap-3">
-              <p className="text-gray-500 text-sm">{exp.desc}</p>
+          <Card key={exp.id} title={exp.name}>
+            <div className="bg-white rounded-xl p-5 flex flex-col gap-3 h-full">
+              <p className="text-sm text-gray-500">{exp.desc}</p>
 
               <div className="text-sm text-gray-600">
-                难度：{exp.difficulty}
+                难度：{difficultyMap[exp.difficulty]}
+              </div>
+
+              <div className="text-sm font-medium text-indigo-600">
+                进度：{stageTextMap[exp.stage]}
               </div>
 
               <button
-                onClick={() => {}}
-                className="mt-auto bg-indigo-500 text-white rounded px-3 py-2"
+                onClick={() => handleEnter(exp)}
+                className="mt-auto bg-indigo-500 text-white rounded px-3 py-2 hover:bg-indigo-600"
               >
                 进入实验
               </button>

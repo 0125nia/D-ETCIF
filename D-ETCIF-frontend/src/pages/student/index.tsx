@@ -1,3 +1,5 @@
+// Package student
+// D-ETCIF-frontend/src/pages/student/index.tsx
 export { default as FeedbackPage } from "./feedback/FeedbackPage";
 export { default as ProfilePage } from "./profile/ProfilePage";
 export { default as PreStagePage } from "./stage/PreStagePage";

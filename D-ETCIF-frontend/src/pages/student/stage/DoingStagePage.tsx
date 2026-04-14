@@ -1,3 +1,5 @@
+// Package stage
+// D-ETCIF-frontend/src/pages/student/stage/DoingStagePage.tsx
 import { PageContainer } from "@/components/common";
 import ThreeColumnLayout from "@/layouts/ThreeColumnLayout";
 import {
