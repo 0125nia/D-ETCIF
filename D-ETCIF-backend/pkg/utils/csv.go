@@ -1,12 +1,12 @@
 // Package utils
 // D-ETCIF-backend/pkg/utils/csv.go
-
 package utils
 
 import (
 	"encoding/csv"
 	"fmt"
 	"os"
+	"strconv"
 
 	"D-ETCIF-backend/internal/model"
 )
@@ -74,6 +74,10 @@ func ParseInt64(s string) int64 {
 	var i int64
 	fmt.Sscanf(s, "%d", &i)
 	return i
+}
+
+func ParseInt64WithErr(s string) (int64, error) {
+	return strconv.ParseInt(s, 10, 64)
 }
 
 func ParseInt8(s string) int8 {
