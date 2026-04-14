@@ -1,3 +1,5 @@
+// Package layouts
+// D-ETCIF-frontend/src/layouts/AsideMainLayout.tsx
 interface Props {
   aside: React.ReactNode; // 左侧内容
   main: React.ReactNode; // 右侧内容

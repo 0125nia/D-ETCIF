@@ -1,3 +1,5 @@
+// Package layouts
+// D-ETCIF-frontend/src/layouts/TeacherLayout.tsx
 import TopNav from "@/components/base/TopNav";
 import { Outlet } from "react-router-dom";
 

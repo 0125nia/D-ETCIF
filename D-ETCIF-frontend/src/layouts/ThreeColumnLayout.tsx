@@ -1,3 +1,5 @@
+// Package layouts
+// D-ETCIF-frontend/src/layouts/ThreeColumnLayout.tsx
 export default function ThreeColumnLayout({
   left,
   center,
