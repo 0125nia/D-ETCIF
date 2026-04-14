@@ -1,6 +1,8 @@
+// Package router
+// D-ETCIF-frontend/src/router/index.tsx
 import type { RouteObject } from "react-router-dom";
 import { Navigate } from "react-router-dom";
-// import { AuthGuard } from "./AuthGuard";
+import { AuthGuard } from "./AuthGuard";
 
 import { StudentLayout, TeacherLayout } from "@/layouts";
 
@@ -43,7 +45,7 @@ const routes: RouteObject[] = [
   // student模块
   {
     path: "/student",
-    // element: <AuthGuard allowRole="student" />,
+    element: <AuthGuard allowRole="student" />,
     children: [
       {
         element: <StudentLayout />,
@@ -61,17 +63,17 @@ const routes: RouteObject[] = [
               },
               {
                 // path: ":labId/pre",
-                path: "pre",
+                path: "pre/:labId",
                 element: <PreStagePage />,
               },
               {
                 // path: ":labId/doing",
-                path: "doing",
+                path: "doing/:labId",
                 element: <DoingStagePage />,
               },
               {
                 // path: ":labId/post",
-                path: "post",
+                path: "post/:labId",
                 element: <PostStagePage />,
               },
             ],
@@ -92,14 +94,14 @@ const routes: RouteObject[] = [
   //  teacher模块
   {
     path: "/teacher",
-    // element: <AuthGuard allowRole="teacher" />,
+    element: <AuthGuard allowRole="teacher" />,
     children: [
       {
         element: <TeacherLayout />,
         children: [
           {
             index: true,
-            element: <Navigate to="dashboard" replace />, // 自动跳转到 /teacher/dashboard
+            element: <Navigate to="dashboard" replace />,
           },
           {
             path: "dashboard",

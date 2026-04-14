@@ -1,3 +1,6 @@
+// Package router
+// D-ETCIF-frontend/src/router/AuthGuard.tsx
+import { useAuthStore } from "@/store";
 import { toast } from "@/store";
 import { Navigate, Outlet } from "react-router-dom";
 
@@ -6,11 +9,16 @@ export function AuthGuard({
 }: {
   allowRole?: "student" | "teacher";
 }) {
-  const token = localStorage.getItem("token");
-  const role = localStorage.getItem("role");
+  const token = useAuthStore((s) => s.token);
+  const role = useAuthStore((s) => s.user?.role);
 
   if (!token) {
     toast.error("请先登录");
+    return <Navigate to="/login" replace />;
+  }
+
+  if (!role) {
+    toast.error("用户信息失效，请重新登录");
     return <Navigate to="/login" replace />;
   }
 
