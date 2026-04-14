@@ -1,3 +1,5 @@
+// Package hooks
+// D-ETCIF-frontend/src/hooks/useTimer.ts
 import { useRef, useState } from "react";
 
 interface UseSimpleTimerReturn {
