@@ -1,3 +1,5 @@
+// Package common
+// D-ETCIF-frontend/src/pages/common/KnowledgeDetailPage.tsx
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import KnowledgeCard from "@/components/common/KnowledgeCard";

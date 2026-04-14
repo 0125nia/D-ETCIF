@@ -1,9 +1,12 @@
+// Package common
+// D-ETCIF-frontend/src/pages/common/NotFound.tsx
 import { useNavigate } from "react-router-dom";
 import AnimatedPage from "@/components/common/AnimatedPage";
+import { useAuthStore } from "@/store";
 
 export default function NotFound() {
   const navigate = useNavigate();
-  const role = localStorage.getItem("role");
+  const role = useAuthStore((s) => s.role);
 
   const goBack = () => {
     // 逻辑：优先回自己的主页，没登录回登录页

@@ -1,5 +1,8 @@
-import CodeEditor from "@/components/common/CodeEditor";
+// Package common
 
+import { Dashboard } from "@/pages/teacher";
+
+// D-ETCIF-frontend/src/pages/common/Test.tsx
 export default function Test() {
   // const data = [
   //   { id: 1, name: "第一项" },
@@ -38,7 +41,11 @@ export default function Test() {
   // ];
 
   return (
-    <CodeEditor />
+    <div>
+      <Dashboard />
+    </div>
+    // <CodeEditor />
+    // <DoingStageLeft />
     // <PageContainer title="教学看板">
     //   <List data={data} renderItem={(item) => <div>{item.name}</div>} />
     //   -------------------------------------
