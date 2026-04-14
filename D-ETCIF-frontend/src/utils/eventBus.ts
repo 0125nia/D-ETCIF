@@ -1,24 +1,36 @@
-// 纯局部事件总线，无任何全局状态
-type Callback = (data: any) => void;
+// Package utils
+// D-ETCIF-frontend/src/utils/eventBus.ts
+type Callback<T> = (data: T) => void;
 
-const eventBus = {
-  events: {} as Record<string, Callback[]>,
+class EventBus<Events extends Record<string, unknown>> {
+  private events: { [K in keyof Events]?: Array<Callback<Events[K]>> } = {};
 
-  // 订阅事件
-  on(event: string, callback: Callback) {
-    if (!this.events[event]) this.events[event] = [];
-    this.events[event].push(callback);
-  },
+  on<K extends keyof Events>(event: K, callback: Callback<Events[K]>) {
+    const list = this.events[event] ?? [];
+    list.push(callback);
+    this.events[event] = list;
+  }
 
-  // 发布事件
-  emit(event: string, data?: any) {
+  emit<K extends keyof Events>(event: K, data: Events[K]) {
     this.events[event]?.forEach((cb) => cb(data));
-  },
+  }
 
-  // 取消订阅（防止内存泄漏）
-  off(event: string, callback: Callback) {
+  off<K extends keyof Events>(event: K, callback: Callback<Events[K]>) {
     this.events[event] = this.events[event]?.filter((cb) => cb !== callback);
-  },
+  }
+}
+
+// 如需扩展事件类型，在这里增加即可
+export type AppEvents = {
+  // 键是事件名，值是 emit 时需要传递的数据类型
+  examScoreUpdate: {
+    score: number | null;
+    completed: boolean;
+  };
+
+  // 以后有其他事件也可以继续加在这里
+  // "auth:logout": undefined;
 };
 
+const eventBus = new EventBus<AppEvents>();
 export default eventBus;
