@@ -13,9 +13,11 @@ import (
 var Config *Conf
 
 type Conf struct {
-	Server *Server `yaml:"server"`
-	Mysql  *Mysql  `yaml:"mysql"`
-	Neo4j  *Neo4j  `yaml:"neo4j"`
+	Server  *Server  `yaml:"server"`
+	Mysql   *Mysql   `yaml:"mysql"`
+	Neo4j   *Neo4j   `yaml:"neo4j"`
+	Python  *Python  `yaml:"python"`
+	Migrate *Migrate `yaml:"migrate"`
 }
 
 type Server struct {
@@ -42,6 +44,12 @@ type Neo4j struct {
 
 type Python struct {
 	BaseURL string `yaml:"baseurl"`
+}
+
+type Migrate struct {
+	Auto                      bool   `yaml:"auto"`
+	UserDataPath              string `yaml:"userdatapath"`
+	ExperimentDetailsDataPath string `yaml:"experimentdetailsdatapath"`
 }
 
 func init() {
