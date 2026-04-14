@@ -1,10 +1,23 @@
+// Package src
+// D-ETCIF-frontend/src/App.tsx
 import { useRoutes } from "react-router-dom";
 import routes from "@/router";
 import Toast from "./components/common/Toast";
 import { AnimatePresence } from "framer-motion";
-import React from "react";
+import React, { useEffect } from "react";
+import { useAuthStore } from "@/store";
+import { useAuthSession } from "@/app/auth/useAuthSession";
 
 export default function App() {
+  // 1) 启动时从 localStorage 初始化 auth store
+  const initFromStorage = useAuthStore((s) => s.initFromStorage);
+  useEffect(() => {
+    initFromStorage();
+  }, [initFromStorage]);
+
+  // 2) 统一 401 会话处理
+  useAuthSession();
+
   const element = useRoutes(routes);
   return (
     <>
