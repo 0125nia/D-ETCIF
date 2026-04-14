@@ -1,3 +1,5 @@
+// Package model
+// D-ETCIF-backend/internal/model/ipython_log.go
 package model
 
 type ExecutionLog struct {

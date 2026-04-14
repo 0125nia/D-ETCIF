@@ -15,7 +15,4 @@ type User struct {
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 	Role      int8      `gorm:"type:tinyint;not null" json:"role"`
-
-	// 综合认知水平（0-100分制或1-5级），由后台算法定期从 Neo4j 同步回来
-	CognitiveLevel float32 `gorm:"default:0" json:"cognitive_level"`
 }
