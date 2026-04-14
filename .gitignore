@@ -12,6 +12,7 @@ node_modules
 dist
 dist-ssr
 *.local
+.trae
 
 # Editor directories and files
 .vscode
@@ -36,7 +37,9 @@ ipynb
 __pycache__
 *.pyc
 
-
+ner_ckpt
 *_kg.json
 
 docs
+
+d_etcif_model*
