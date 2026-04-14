@@ -1,10 +1,8 @@
+// Package store
+// D-ETCIF-frontend/src/store/experiment.store.ts
 import { create } from "zustand";
-import type { Stage } from "@/types/domain/global";
-import {
-  trackPreEvent,
-  trackMidEvent,
-  trackPostEvent,
-} from "@/services/tracker";
+import type { Stage } from "@/types/experiment";
+import { checkDoingStageDone } from "@/services/experiment";
 
 interface ExperimentState {
   currentExperimentId: number | null;
@@ -13,56 +11,51 @@ interface ExperimentState {
   enterExperiment: (id: number) => void;
   startDoing: () => void;
   finishExperiment: () => void;
+  checkCanMoveToPost: () => Promise<boolean>;
 }
 
 export const useExperimentStore = create<ExperimentState>((set, get) => ({
   currentExperimentId: 1,
-  currentStage: "DOING",
+  currentStage: null,
 
   enterExperiment: (id) => {
     set({
       currentExperimentId: id,
-      currentStage: "POST",
+      currentStage: "DOING",
     });
-    // 预习埋点：进入实验
-    trackPreEvent({
-      experiment_id: id.toString(),
-      resource_id: "experiment_entry",
-      resource_name: "进入实验",
-      path: window.location.pathname,
-      duration: 0,
-    }).catch(console.error);
   },
 
   startDoing: () => {
-    const { currentStage, currentExperimentId } = get();
+    const { currentStage } = get();
     if (currentStage === "PRE") {
       set({ currentStage: "DOING" });
-      // 实验中埋点：开始实验
-      if (currentExperimentId) {
-        trackMidEvent({
-          experiment_id: currentExperimentId.toString(),
-          action_type: "start_experiment",
-          content: "从预习阶段进入实验阶段",
-          duration: 0,
-        }).catch(console.error);
-      }
     }
   },
 
   finishExperiment: () => {
-    const { currentStage, currentExperimentId } = get();
+    const { currentStage } = get();
     if (currentStage === "DOING") {
       set({ currentStage: "POST" });
-      // 实验后埋点：完成实验
-      if (currentExperimentId) {
-        trackPostEvent({
-          experiment_id: currentExperimentId.toString(),
-          action_type: "finish_experiment",
-          score: 0,
-          content: "从实验阶段进入总结阶段",
-        }).catch(console.error);
+    }
+  },
+
+  setStage: (stage: Stage) => set({ currentStage: stage }),
+
+  checkCanMoveToPost: async () => {
+    const { currentExperimentId } = get();
+    if (!currentExperimentId) return false;
+    try {
+      // 调用后端“伴随式评价”接口，获取当前实验是否达标
+      const { data } = await checkDoingStageDone(currentExperimentId);
+
+      if (!data.can_move) {
+        // 如果后端说不行，可以在这里做点什么，或者把 message 返回出去
+        console.warn("未达标原因:", data.message);
       }
+      return data.can_move;
+    } catch (error) {
+      console.error("检查状态失败", error);
+      return false; // 报错则默认拦截，保证逻辑严谨
     }
   },
 }));

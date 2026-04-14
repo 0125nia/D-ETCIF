@@ -1,3 +1,5 @@
+// Package store
+// D-ETCIF-frontend/src/store/toast.store.ts
 import { create } from "zustand";
 
 interface ToastState {
