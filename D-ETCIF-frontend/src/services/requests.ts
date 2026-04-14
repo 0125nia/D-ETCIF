@@ -1,7 +1,11 @@
+// Package services
+// D-ETCIF-frontend/src/services/requests.ts
 import axios from "axios";
+import { STORAGE_KEYS } from "@/constants/storage";
+import { API_BASE_URL } from "@/services/api";
 
 export const request = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL,
+  baseURL: API_BASE_URL,
   timeout: 5000,
 });
 
@@ -9,7 +13,7 @@ export const request = axios.create({
  * request 拦截
  */
 request.interceptors.request.use((config) => {
-  const token = localStorage.getItem("token");
+  const token = localStorage.getItem(STORAGE_KEYS.token);
 
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
@@ -30,8 +34,9 @@ request.interceptors.response.use(
 
     // 只有【不是登录接口】的 401 才自动跳登录
     if (err.response?.status === 401 && !isLoginApi) {
-      localStorage.clear();
+      localStorage.removeItem(STORAGE_KEYS.token);
       window.location.href = "/login";
+      return Promise.reject(new Error("未授权，请重新登录"));
     }
 
     return Promise.reject(err);

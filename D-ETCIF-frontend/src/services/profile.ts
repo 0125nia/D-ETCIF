@@ -1,12 +1,26 @@
+// Package services
+// D-ETCIF-frontend/src/services/profile.ts
 import { request } from "./requests";
-import type { CognitiveMapData } from "@/types/domain/profile";
-import type { StudyReportData } from "@/types/domain/profile";
+import type {
+  CognitiveMapData,
+  StudyReportData,
+  ResourceRecommendation,
+} from "@/types";
+import { API } from "./api";
 
-
-export const getCognitiveMap = (): Promise<{ data: CognitiveMapData }> => {
-     return request.get<{ data: CognitiveMapData }>("/api/student/profile/cognitive-map").then(response => response.data);
+export type CognitiveMapRes = { data: CognitiveMapData };
+export type StudyReportRes = { data: StudyReportData };
+export type ResourceRecommendationRes = { data: ResourceRecommendation[] };
+export const getCognitiveMap = () => {
+  return request.get<CognitiveMapRes>(API.student.profile.cognitiveMap);
 };
 
-export const getStudyReport = (): Promise<{ data: StudyReportData }> => {
-  return request.get<{ data: StudyReportData }>("/api/student/profile/report").then(response => response.data)  ;
+export const getStudyReport = () => {
+  return request.get<StudyReportRes>(API.student.profile.studyReport);
+};
+
+export const getRecommendations = () => {
+  return request.get<ResourceRecommendationRes>(
+    API.student.profile.recommendations,
+  );
 };

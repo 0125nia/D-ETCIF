@@ -1,28 +1,15 @@
+// Package services
+// D-ETCIF-frontend/src/services/dashboard.ts
 import { request } from "./requests";
+import { API } from "./api";
+import type { HeatmapItem, BehaviorData, WarningData } from "@/types/dashboard";
 
-export interface HeatmapData {
-  name: string;
-  value: number;
-}
+// 包装一层 data，因为后端返回格式是 { data: ... }
+export const getHeatmapData = () =>
+  request.get<{ data: HeatmapItem[] }>(API.teacher.dashboard.heatmap);
 
-export interface WarningData {
-  low_confidence: { name: string; score: number }[];
-  high_frequency_error: { error: string; count: number }[];
-}
+export const getBehaviorData = () =>
+  request.get<{ data: BehaviorData }>(API.teacher.dashboard.behavior);
 
-export interface BehaviorData {
-  indicators: { name: string; max: number }[];
-  data: { value: number[]; name: string }[];
-}
-
-export const getHeatmapData = () => {
-  return request.get<{ data: HeatmapData[] }>("/api/teacher/dashboard/heatmap");
-};
-
-export const getWarningData = () => {
-  return request.get<{ data: WarningData }>("/api/teacher/dashboard/warning");
-};
-
-export const getBehaviorData = () => {
-  return request.get<{ data: BehaviorData }>("/api/teacher/dashboard/behavior");
-};
+export const getWarningData = () =>
+  request.get<{ data: WarningData }>(API.teacher.dashboard.warning);
