@@ -35,6 +35,6 @@ def send_to_backend(result):
 ip = get_ipython()
 if ip:
     ip.events.register('post_run_cell', send_to_backend)
-    print(f"✅ 监控启动成功")
-    print(f"👤 学生ID: {student_id}")
-    print(f"🧪 实验ID: {experiment_id}")
+    print(f"监控启动成功")
+    print(f"学生ID: {student_id}")
+    print(f"实验ID: {experiment_id}")
