@@ -1,3 +1,5 @@
+// Package common
+// D-ETCIF-frontend/src/components/common/Timer.tsx
 import React from "react";
 import { useSimpleTimer } from "@/hooks/useTimer"; // 假设上面代码存于此文件
 

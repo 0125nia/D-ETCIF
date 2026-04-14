@@ -1,3 +1,5 @@
+// Package common
+// D-ETCIF-frontend/src/components/common/ChartSkeleton.tsx
 import React from "react";
 
 interface ChartSkeletonProps {

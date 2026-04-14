@@ -1,3 +1,5 @@
+// Package common
+// D-ETCIF-frontend/src/components/common/PageContainer.tsx
 export default function PageContainer({
   title = "",
   children,

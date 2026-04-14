@@ -1,3 +1,5 @@
+// Package common
+// D-ETCIF-frontend/src/components/common/KnowledgeCard.tsx
 import React from "react";
 
 export interface KnowledgeItem {

@@ -1,3 +1,5 @@
+// Package common
+// D-ETCIF-frontend/src/components/common/index.tsx
 export { default as Button } from "./Button";
 export { default as Toast } from "./Toast";
 export { default as List } from "./List";
@@ -7,3 +9,4 @@ export { default as StatItem } from "./StatItem";
 export { default as ChartSkeleton } from "./ChartSkeleton";
 export { default as Card } from "./Card";
 export { default as KnowledgeCard } from "./KnowledgeCard";
+export { default as FeedbackModal } from "./FeedbackModal";

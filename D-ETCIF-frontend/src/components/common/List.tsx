@@ -1,3 +1,5 @@
+// Package common
+// D-ETCIF-frontend/src/components/common/List.tsx
 import React, { useState } from "react";
 
 // 树形结构节点接口（支持 children 递归）

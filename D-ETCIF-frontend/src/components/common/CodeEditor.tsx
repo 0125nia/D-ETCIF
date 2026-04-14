@@ -1,3 +1,5 @@
+// Package common
+// D-ETCIF-frontend/src/components/common/CodeEditor.tsx
 import { useAuthStore, useExperimentStore } from "@/store";
 
 export default function CodeEditor() {

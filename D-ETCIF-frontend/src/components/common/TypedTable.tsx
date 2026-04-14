@@ -1,3 +1,5 @@
+// Package common
+// D-ETCIF-frontend/src/components/common/TypedTable.tsx
 import type React from "react";
 
 export interface TypedColumn<T extends object> {

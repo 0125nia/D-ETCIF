@@ -1,4 +1,5 @@
-// src/components/AnimatedPage.tsx
+// Package common
+// D-ETCIF-frontend/src/components/common/AnimatedPage.tsx
 import { motion } from "framer-motion";
 import type { ReactNode } from "react";
 

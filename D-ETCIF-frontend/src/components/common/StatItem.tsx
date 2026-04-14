@@ -1,3 +1,5 @@
+// Package common
+// D-ETCIF-frontend/src/components/common/StatItem.tsx
 interface StatItemProps {
   label: string; // 标签文字
   value: string | number; // 数值

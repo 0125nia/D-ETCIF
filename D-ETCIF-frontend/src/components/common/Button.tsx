@@ -1,4 +1,7 @@
+// Package common
+// D-ETCIF-frontend/src/components/common/Button.tsx
 import React from "react";
+import { cn } from "@/utils/cn";
 
 interface Props extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: "primary" | "danger" | "ghost";
@@ -23,7 +26,7 @@ export default function Button({
 
   return (
     <button
-      className={`${base} ${style[variant]} ${className}`}
+      className={cn(base, style[variant], className)}
       disabled={loading || props.disabled}
       {...props}
     >
