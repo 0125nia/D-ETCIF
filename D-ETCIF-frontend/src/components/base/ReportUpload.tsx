@@ -1,9 +1,18 @@
+// Package base
+// D-ETCIF-frontend/src/components/base/ReportUpload.tsx
 import { useState } from "react";
 import { Card, Button } from "@/components/common";
+import { toast } from "@/store"; // 使用项目统一的 toast
+import { uploadExperimentReport } from "@/services/experiment";
+import { useParams } from "react-router-dom";
 
 export default function ReportUpload() {
+  const { experimentId } = useParams<{ experimentId: string }>();
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<"idle" | "success">(
+    "idle",
+  );
 
   // 点击虚线框 → 打开文件选择
   const triggerFileSelect = () => {
@@ -15,18 +24,17 @@ export default function ReportUpload() {
     const selectedFile = e.target.files?.[0];
     if (selectedFile) {
       setFile(selectedFile);
+      setUploadProgress("idle"); // 重新选择文件时重置状态
     }
   };
 
-  // 删除文件
   const handleRemoveFile = () => {
     setFile(null);
   };
 
-  // 点击按钮 → 上传后端
   const handleUpload = async () => {
-    if (!file) {
-      alert("请先选择文件");
+    if (!file || !experimentId) {
+      toast.error("请先选择文件");
       return;
     }
 
@@ -34,22 +42,15 @@ export default function ReportUpload() {
     try {
       const formData = new FormData();
       formData.append("reportFile", file);
+      formData.append("experimentId", experimentId);
 
-      // 你的后端上传接口
-      const res = await fetch("/api/upload/report", {
-        method: "POST",
-        body: formData,
-      });
+      await uploadExperimentReport(formData);
 
-      if (res.ok) {
-        alert("上传成功！");
-        setFile(null);
-      } else {
-        alert("上传失败");
-      }
+      toast.success("报告上传成功！");
+      setUploadProgress("success");
+      setFile(null);
     } catch (err) {
-      console.error(err);
-      alert("上传异常");
+      toast.error("上传失败，请稍后重试");
     } finally {
       setLoading(false);
     }
@@ -60,13 +61,17 @@ export default function ReportUpload() {
       <div className="space-y-4">
         <div
           onClick={triggerFileSelect}
-          className="border border-dashed border-gray-300 rounded p-6 text-center text-sm text-gray-500 cursor-pointer hover:bg-gray-50"
+          className={`border border-dashed rounded p-6 text-center text-sm cursor-pointer transition-colors
+            ${file ? "border-blue-400 bg-blue-50" : "border-gray-300 hover:bg-gray-50"}
+          `}
         >
           {file ? (
             <div className="flex flex-col items-center gap-2">
-              <p className="text-gray-700 font-medium">{file.name}</p>
-              <p className="text-xs text-gray-400">
-                大小：{(file.size / 1024 / 1024).toFixed(2)} MB
+              <p className="text-blue-700 font-medium truncate w-full px-4">
+                {file.name}
+              </p>
+              <p className="text-xs text-blue-400">
+                {(file.size / 1024 / 1024).toFixed(2)} MB
               </p>
               <button
                 type="button"
@@ -74,17 +79,19 @@ export default function ReportUpload() {
                   e.stopPropagation();
                   handleRemoveFile();
                 }}
-                className="text-xs text-red-500 hover:underline"
+                className="text-xs text-red-500 hover:underline mt-1"
               >
-                删除文件
+                删除并重新选择
               </button>
             </div>
           ) : (
-            <p>点击此处选择文件</p>
+            <div className="text-gray-500">
+              <p className="font-medium text-gray-600">点击此处选择文件</p>
+              <p className="text-xs mt-1">支持 PDF, Word, Excel 格式</p>
+            </div>
           )}
         </div>
 
-        {/* 隐藏的文件输入框 */}
         <input
           type="file"
           id="report-upload"
@@ -93,15 +100,20 @@ export default function ReportUpload() {
           accept=".pdf,.doc,.docx,.xls,.xlsx"
         />
 
-        {/* ✅ 点击按钮 → 上传后端 */}
         <Button
           variant="primary"
           className="w-full"
           onClick={handleUpload}
           disabled={loading || !file}
         >
-          {loading ? "上传中..." : "确认上传报告"}
+          {loading ? "正在上传..." : "确认上传报告"}
         </Button>
+
+        {uploadProgress === "success" && (
+          <p className="text-center text-xs text-green-600 animate-pulse">
+            ✓ 您的报告已成功存档
+          </p>
+        )}
       </div>
     </Card>
   );

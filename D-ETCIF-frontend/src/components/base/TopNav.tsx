@@ -1,12 +1,17 @@
-import { useAuthStore, useUIStore } from "@/store";
-import type { StudentNav, TeacherNav, ActiveNav } from "@/types/domain/global";
+// Package base
+// D-ETCIF-frontend/src/components/base/TopNav.tsx
+import { useAuthStore } from "@/store";
+import { useHelpModal } from "@/app/ui/useHelpModal";
+import { cn } from "@/utils/cn";
+import type { StudentNav, TeacherNav, ActiveNav } from "@/types/nav";
 import { useNavigate } from "react-router-dom";
 import StageTag from "./StageTag";
 
 const TopNav = () => {
   const { activeNav, setNav, user } = useAuthStore();
-  const { setHelpModalOpen } = useUIStore();
-  const role = user.role;
+  const { open: openHelpModal } = useHelpModal();
+  const role = user?.role;
+  // const role = "teacher";
   const navigate = useNavigate();
 
   const studentNav: { key: StudentNav; label: string }[] = [
@@ -36,10 +41,8 @@ const TopNav = () => {
 
   const handleClick = (key: ActiveNav) => {
     setNav(key);
-
-    // ⭐ 学生求助 → 弹窗
     if (role === "student" && key === "help") {
-      setHelpModalOpen(true);
+      openHelpModal();
       return;
     }
 
@@ -56,11 +59,12 @@ const TopNav = () => {
           <button
             key={item.key}
             onClick={() => handleClick(item.key)}
-            className={`text-base pb-2 border-b-2 transition-colors ${
+            className={cn(
+              "text-base pb-2 border-b-2 transition-colors",
               activeNav === item.key
                 ? "text-blue-500 border-blue-500 font-medium"
-                : "text-gray-500 border-transparent"
-            }`}
+                : "text-gray-500 border-transparent",
+            )}
           >
             {item.label}
           </button>
@@ -69,18 +73,18 @@ const TopNav = () => {
 
       <StageTag />
 
-        <div className="flex items-center gap-2">
-      <div className="text-gray-800 text-sm">
-        {user.id || "加载中..."} | {user.name || ""}
-      </div>
-      <div className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center border border-gray-200">
-          <img 
-            src="/profile.png" 
-            alt="头像" 
-            className="w-5 h-5 object-contain" 
+      <div className="flex items-center gap-2">
+        <div className="text-gray-800 text-sm">
+          {user?.user_number || "加载中..."} | {user?.name || ""}
+        </div>
+        <div className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center border border-gray-200">
+          <img
+            src="/profile.png"
+            alt="头像"
+            className="w-5 h-5 object-contain"
           />
         </div>
-        </div>
+      </div>
     </div>
   );
 };
