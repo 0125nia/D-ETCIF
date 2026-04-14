@@ -1,6 +1,8 @@
+// Package post
+// D-ETCIF-frontend/src/components/student/stage/post/PostStageLeft.tsx
 import Card from "@/components/common/Card";
 import List from "@/components/common/List";
-import type { PostTaskItem } from "@/types/domain/post";
+import type { PostTaskItem } from "@/types";
 
 interface Props {
   onItemClick: (item: PostTaskItem) => void;
