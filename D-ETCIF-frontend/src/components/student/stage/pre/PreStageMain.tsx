@@ -1,12 +1,12 @@
-import type { ResourceItem } from "@/types/domain/resource";
-
-
+// Package pre
+// D-ETCIF-frontend/src/components/student/stage/pre/PreStageMain.tsx
+import type { ResourceItem } from "@/types/experimentData";
 
 export default function PreStageMain({
   resource,
 }: {
   resource: ResourceItem | null;
-})  {
+}) {
   if (!resource) {
     return (
       <div style={{ padding: "30px" }}>
@@ -51,7 +51,7 @@ export default function PreStageMain({
             style={{ width: "100%", height: "700px", border: "none" }}
           />
         );
-            case "video":
+      case "video":
         return (
           <video
             src={resource.url}
