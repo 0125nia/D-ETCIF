@@ -4,13 +4,26 @@ import { useAuthStore, useExperimentStore } from "@/store";
 
 export default function CodeEditor() {
   const user = useAuthStore((state) => state.user);
+  const token = useAuthStore((state) => state.token);
   const currentExperimentId = useExperimentStore(
     (state) => state.currentExperimentId,
   );
+
+  const studentId = user?.id ?? 0;
+  const experimentId =
+    currentExperimentId === null ? "" : String(currentExperimentId);
+  const params = new URLSearchParams({
+    studentId: String(studentId),
+    experimentId,
+  });
+  if (token) {
+    params.set("token", token);
+  }
+
   return (
     <div className="h-screen w-full">
       <iframe
-        src={`http://localhost:8888/lab/tree/ipynb/test.ipynb?studentId=${user.id}&experimentId=${currentExperimentId}`}
+        src={`http://localhost:8888/lab/tree/ipynb/test.ipynb?${params.toString()}`}
         className="w-full h-full border-none"
         title="notebook"
       />

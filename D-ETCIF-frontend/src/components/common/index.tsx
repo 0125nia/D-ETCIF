@@ -10,3 +10,4 @@ export { default as ChartSkeleton } from "./ChartSkeleton";
 export { default as Card } from "./Card";
 export { default as KnowledgeCard } from "./KnowledgeCard";
 export { default as FeedbackModal } from "./FeedbackModal";
+export { default as CodeEditor } from "./CodeEditor";
