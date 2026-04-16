@@ -16,13 +16,19 @@ func main() {
 	utils.Info("========开始初始化数据库连接========")
 
 	db_config.InitDB()
-	
+
 	repository.Migrate()
 
 	utils.Info("========数据库连接初始化完成========")
 
 	utils.Info("========初始化规则引擎========")
 	service.InitEngine()
+
+	utils.Info("========初始化监控事件管线========")
+	service.InitMonitorPipeline()
+
+	utils.Info("========初始化反馈事件管线========")
+	service.InitFeedbackPipeline()
 
 	r := router.NewRouter()
 
