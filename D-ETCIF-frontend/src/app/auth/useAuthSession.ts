@@ -12,8 +12,8 @@ export function useAuthSession() {
 
   useEffect(() => {
     const id = request.interceptors.response.use(
-      (res) => res,
-      (err) => {
+      (res: any) => res,
+      (err: any) => {
         const isLoginApi = err?.config?.url === "/api/login";
         const status = err?.response?.status;
 
