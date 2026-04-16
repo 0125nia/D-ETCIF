@@ -31,10 +31,6 @@ func InitDB() {
 	}
 	utils.Info("MySQL 已连接")
 
-	// 自动迁移模型
-	// TODO: import model package in db.go would cause circular dependency if model imports db.go
-	// But db.go currently doesn't import model. Let's just assume we'll migrate them here.
-
 	// 2. Neo4j 初始化
 	uri := fmt.Sprintf("bolt://%s:%d", cfg.Config.Neo4j.Host, cfg.Config.Neo4j.Port)
 	Neo4jDriver, err = neo4j.NewDriverWithContext(uri, neo4j.BasicAuth(cfg.Config.Neo4j.UserName, cfg.Config.Neo4j.Password, ""))
