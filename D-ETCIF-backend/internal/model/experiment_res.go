@@ -35,6 +35,7 @@ type OperationResult struct {
 // 不需要存储在数据库中
 type StudentExperimentOverview struct {
 	UserID         int64   `json:"user_id"`
+	Username       string  `json:"username"`
 	ExperimentID   int64   `json:"experiment_id"`
 	CurrentStage   int     `json:"current_stage"`
 	OperationScore float64 `json:"operation_score"`
