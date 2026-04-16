@@ -50,6 +50,8 @@ type Migrate struct {
 	Auto                      bool   `yaml:"auto"`
 	UserDataPath              string `yaml:"userdatapath"`
 	ExperimentDetailsDataPath string `yaml:"experimentdetailsdatapath"`
+	ExperimentDataPath        string `yaml:"experimentdatapath"`
+	ExperimentStagesPath      string `yaml:"experimentstagespath"`
 }
 
 func init() {

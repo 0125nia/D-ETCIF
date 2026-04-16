@@ -24,3 +24,5 @@ migrate:
   auto: true
   userdatapath: ./configs/users.csv
   experimentdetailsdatapath: ./configs/experiment_details.json
+  experimentdatapath: ./configs/experiment_data.json
+  experimentstagespath: ./configs/experiment_stages.json
