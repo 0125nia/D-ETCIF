@@ -26,6 +26,10 @@ func NewDashboardService(db *gorm.DB, neo4jDriver neo4j.DriverWithContext) *Dash
 
 // GetHeatmapData 获取班级知识点掌握情况 (Neo4j)
 func (s *DashboardService) GetHeatmapData(ctx context.Context) ([]model.HeatmapItem, error) {
+	if s.neo4jDriver == nil {
+		return []model.HeatmapItem{}, nil
+	}
+
 	session := s.neo4jDriver.NewSession(ctx, neo4j.SessionConfig{AccessMode: neo4j.AccessModeRead})
 	defer session.Close(ctx)
 
@@ -39,15 +43,22 @@ func (s *DashboardService) GetHeatmapData(ctx context.Context) ([]model.HeatmapI
 		return nil, err
 	}
 
-	var list []model.HeatmapItem
+	list := make([]model.HeatmapItem, 0)
 	for result.Next(ctx) {
 		record := result.Record()
+		avgScore, ok := record.Values[3].(float64)
+		if !ok {
+			avgScore = 0
+		}
 		list = append(list, model.HeatmapItem{
 			ID:    fmt.Sprint(record.Values[0]),
 			Name:  fmt.Sprint(record.Values[1]),
 			Group: fmt.Sprint(record.Values[2]),
-			Value: record.Values[3].(float64),
+			Value: avgScore,
 		})
+	}
+	if err := result.Err(); err != nil {
+		return nil, err
 	}
 	return list, nil
 }
@@ -77,7 +88,15 @@ func (s *DashboardService) GetWarningData(ctx context.Context) (*model.WarningDa
 	err := s.db.Raw(`
         SELECT 
             kp_name as title, 
-            COUNT(*) * 100 / (SELECT COUNT(*) FROM mid_events WHERE action_type = 'error') as rate
+			COALESCE(
+				CAST(
+					ROUND(
+						COUNT(*) * 100.0 / NULLIF((SELECT COUNT(*) FROM mid_events WHERE action_type = 'error'), 0),
+						0
+					) AS SIGNED
+				),
+				0
+			) as rate
         FROM mid_events 
         WHERE action_type = 'error'
         GROUP BY kp_name 
