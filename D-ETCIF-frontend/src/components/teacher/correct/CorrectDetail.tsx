@@ -56,14 +56,12 @@ export default function CorrectDetail({
     setLoading(true);
     getStudentResultDetail(studentId, experimentId)
       .then((res) => {
-        // res 是 AxiosResponse，res.data 才是 StudentResultDetail
-        setDetail(res.data);
+        setDetail(res);
       })
       .catch((err) => {
         console.error("获取详情失败:", err);
       })
       .finally(() => setLoading(false));
-    setLoading(false);
   }, [studentId, experimentId]);
 
   useEffect(() => {
