@@ -50,3 +50,5 @@ backend.exe
 
 *.bat
 SYSTEM.md
+*.model
+test_*.*

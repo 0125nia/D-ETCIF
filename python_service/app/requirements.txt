@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+pydantic
+python-dotenv
+networkx
+node2vec
+py2neo
+gensim

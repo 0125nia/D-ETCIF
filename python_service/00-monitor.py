@@ -9,6 +9,7 @@ query = os.environ.get('QUERY_STRING', '')
 params = urllib.parse.parse_qs(query)
 
 # 读取前端传过来的用户信息
+token = params.get('token', [''])[0]
 student_id = params.get('studentId', [''])[0]
 experiment_id = params.get('experimentId', [''])[0]
 
@@ -22,10 +23,15 @@ def send_to_backend(result):
         "error": str(result.error_in_exec) if result.error_in_exec else ""
     }
 
+    headers = {}
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+
     try:
         requests.post(
             "http://localhost:4000/api/v1/monitor/collect",
             json=data,
+            headers=headers,
             timeout=1
         )
     except Exception as e:
