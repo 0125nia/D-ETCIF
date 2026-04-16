@@ -14,7 +14,7 @@ import (
 // JWTAuth 登录校验中间件
 func JWTAuth() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// 1. 获取请求头 Authorization
+		// 1. 获取 token。优先 Authorization: Bearer <token>，兼容 query 的原始 token。
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
 			authHeader = c.Query("token")
@@ -28,18 +28,19 @@ func JWTAuth() gin.HandlerFunc {
 			return
 		}
 
-		// 2. 校验格式 Bearer token
+		tokenStr := authHeader
 		parts := strings.SplitN(authHeader, " ", 2)
-		if !(len(parts) == 2 && parts[0] == "Bearer") {
-			c.JSON(http.StatusUnauthorized, gin.H{
-				"code": 401,
-				"msg":  "token格式错误",
-			})
-			c.Abort()
-			return
+		if len(parts) == 2 {
+			if parts[0] != "Bearer" {
+				c.JSON(http.StatusUnauthorized, gin.H{
+					"code": 401,
+					"msg":  "token格式错误",
+				})
+				c.Abort()
+				return
+			}
+			tokenStr = parts[1]
 		}
-
-		tokenStr := parts[1]
 
 		// 3. 解析token
 		claims, err := utils.ParseToken(tokenStr)
