@@ -10,12 +10,12 @@ import { API_BASE_URL } from "@/services/api";
 export const useWebSocket = () => {
   const ws = useRef<WebSocket | null>(null);
   const user = useAuthStore((s) => s.user);
-  const { setSelectedFeedback } = useFeedbackStore();
+  const { setSelectedFeedback, appendFeedback } = useFeedbackStore();
 
   useEffect(() => {
     const userId = user?.id;
     const userName = user?.name;
-    if (userId == null || ws.current) return;
+    if (userId == null || userId === 0 || ws.current) return;
 
     const token = useAuthStore.getState().token;
 
@@ -47,7 +47,7 @@ export const useWebSocket = () => {
 
             const feedback: Feedback = {
               id: `rt_${Date.now()}_${Math.random().toString(16).slice(2)}`,
-              type: "REALTIME",
+              type: "即时提醒",
               title: alert.Name || "实时反馈",
               content: alert.Message
                 ? `${alert.Name}: ${alert.Message}`
@@ -56,6 +56,7 @@ export const useWebSocket = () => {
               createdAt: Date.now(),
             };
 
+            appendFeedback(feedback);
             setSelectedFeedback(feedback);
           });
         }
@@ -70,7 +71,7 @@ export const useWebSocket = () => {
           // 2. 适配你的 FeedbackStore：更新当前选中的反馈内容
           const feedback: Feedback = {
             id: `st_${Date.now()}_${Math.random().toString(16).slice(2)}`,
-            type: "STRATEGY",
+            type: "思路引导",
             title: title || "思路引导",
             content: `
 ### ${title}
@@ -88,6 +89,35 @@ ${code_snippet}
             knowledgeLink: knowledge_link,
           };
 
+          appendFeedback(feedback);
+          setSelectedFeedback(feedback);
+        }
+
+        // 处理三级反馈（长期补救）
+        if (res.type === "SUMMARY_FEEDBACK") {
+          const weakPoints = Array.isArray(res.data?.weak_points)
+            ? res.data.weak_points
+            : [];
+          const summaryLines = weakPoints.map((item: any, index: number) => {
+            const resources = Array.isArray(item.resources)
+              ? item.resources.filter(Boolean)
+              : [];
+            const mastery = Number(item.mastery ?? 0).toFixed(2);
+            return `${index + 1}. ${item.knowledge_point || "未知知识点"}（掌握度 ${mastery}）${resources.length > 0 ? `\n   推荐资源：${resources.join("、")}` : ""}`;
+          });
+
+          toast.success("实验总结已生成，请查看前往反馈中心查看长期补救反馈");
+
+          const feedback: Feedback = {
+            id: `sm_${Date.now()}_${Math.random().toString(16).slice(2)}`,
+            type: "长期补救",
+            title: "实验总结：薄弱点与资源推荐",
+            content: `${res.data?.message || "实验已结束，系统生成了总结反馈。"}${summaryLines.length > 0 ? `\n\n${summaryLines.join("\n")}` : "\n\n暂无识别到明确薄弱点。"}`,
+            severity: "success",
+            createdAt: Date.now(),
+          };
+
+          appendFeedback(feedback);
           setSelectedFeedback(feedback);
         }
       } catch (err) {
@@ -111,7 +141,7 @@ ${code_snippet}
         ws.current = null;
       }
     };
-  }, [user?.id]); // 当用户 ID 变化时重新挂载（如登入/登出）
+  }, [appendFeedback, setSelectedFeedback, user?.id]); // 当用户 ID 变化时重新挂载（如登入/登出）
 
   return ws.current;
 };
