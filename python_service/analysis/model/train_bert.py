@@ -128,11 +128,10 @@ def train():
         output_dir="./ner_ckpt",
         num_train_epochs=6,
         per_device_train_batch_size=16,
-        evaluation_strategy="epoch",
+        evaluation_strategy="epoch", 
         save_strategy="epoch",
         learning_rate=3e-5,
-        logging_steps=20,
-        use_mps_device=torch.backends.mps.is_available()
+        logging_steps=20
     )
 
     trainer = Trainer(

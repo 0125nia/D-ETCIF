@@ -27,7 +27,7 @@ class KGBuilder:
         else:
             return
 
-        # ⭐ merge节点
+        # merge节点
         self.graph.merge(exp_node, "Experiment", "name")
 
         if rel == "包含知识点":
@@ -36,7 +36,7 @@ class KGBuilder:
         elif rel == "包含任务":
             self.graph.merge(obj_node, "Task", "name")
 
-        # ⭐ merge关系
+        # merge关系
         self.graph.merge(rel_obj)
 
 
@@ -54,4 +54,4 @@ if __name__ == "__main__":
     for t in triplets:
         builder.insert_triplet(*t)
 
-    print("KG构建完成 ✅")
+    print("KG构建完成")

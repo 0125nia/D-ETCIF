@@ -50,11 +50,11 @@ class EducationalKnowledgeEngine:
             elif e["entity_group"] == "EXP":
                 exp_list.append(word)
 
-        # ⭐ fallback
+        # fallback
         if not task_list:
             task_list = self.rule_extract_task(text)
 
-        # ⭐ 如果连实验名都没有 → 再加规则
+        # 如果连实验名都没有 → 再加规则
         if not exp_list:
 
             m = re.search(r"实验\d+", text)

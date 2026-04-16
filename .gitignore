@@ -43,3 +43,10 @@ ner_ckpt
 docs
 
 d_etcif_model*
+
+backend.exe
+*.json
+*.csv
+
+*.bat
+SYSTEM.md

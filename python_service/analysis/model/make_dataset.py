@@ -1,7 +1,7 @@
 import os
 import re
 import random
-from .data_source import DOMAIN_DICT
+from data_source import DOMAIN_DICT
 
 
 NEG_KEEP_PROB = 0.3
