@@ -21,10 +21,11 @@ func Migrate() {
 		return
 	}
 
-	if config.DB.Migrator().HasTable(&MigrationLog{}) {
-		utils.Info("数据库已迁移，跳过迁移")
-		return
-	}
+	// 暂时注释掉检查，强制重新迁移
+	// if config.DB.Migrator().HasTable(&MigrationLog{}) {
+	// 	utils.Info("数据库已迁移，跳过迁移")
+	// 	return
+	// }
 
 	if err := AutoMigrate(); err != nil {
 		utils.Errorf("数据库迁移失败: %v", err)
@@ -51,15 +52,66 @@ func AutoMigrate() error {
 		&model.PreEvent{},
 		&model.MidEvent{},
 		&model.PostEvent{},
+		&model.ExecutionLog{},
+		&model.FeedbackRecord{},
 		&model.Rule{},
+		&model.Experiment{},
+		&model.ExperimentDetails{},
+		&model.ExperimentReport{},
+		&model.ExperimentSummary{},
+		&model.OperationResult{},
+		&model.PreExperimentData{},
+		&model.PostExperimentData{},
+		&model.DoingExperimentData{},
 	)
 	return err
 }
 
 func MigrateWithData() error {
+	var errors []error
+
 	// 迁移用户数据
-	err := MigrateUsers(cfg.Config.Migrate.UserDataPath)
-	return err
+	if err := MigrateUsers(cfg.Config.Migrate.UserDataPath); err != nil {
+		utils.Errorf("迁移用户数据失败: %v", err)
+		errors = append(errors, err)
+	}
+
+	// 迁移实验详情数据
+	if err := MigrateExperimentDetails(cfg.Config.Migrate.ExperimentDetailsDataPath); err != nil {
+		utils.Errorf("迁移实验详情数据失败: %v", err)
+		errors = append(errors, err)
+	}
+
+	// 迁移实验数据
+	if err := MigrateExperimentData(cfg.Config.Migrate.ExperimentDataPath); err != nil {
+		utils.Errorf("迁移实验数据失败: %v", err)
+		errors = append(errors, err)
+	}
+
+	// 迁移用户实验数据
+	if err := MigrateUserExperiments(cfg.Config.Migrate.ExperimentStagesPath); err != nil {
+		utils.Errorf("迁移用户实验数据失败: %v", err)
+		errors = append(errors, err)
+	}
+
+	// 迁移教师端结果与仪表盘初始化数据
+	if err := MigrateTeacherEndpointData(); err != nil {
+		utils.Errorf("迁移教师端初始化数据失败: %v", err)
+		errors = append(errors, err)
+	}
+
+	// 迁移学生profile数据
+	if err := MigrateProfileData(); err != nil {
+		utils.Errorf("迁移学生profile数据失败: %v", err)
+		errors = append(errors, err)
+	}
+
+	// 如果有错误，返回第一个错误
+	if len(errors) > 0 {
+		return errors[0]
+	}
+
+	return nil
 }
 
 func logMigration(success bool) {
