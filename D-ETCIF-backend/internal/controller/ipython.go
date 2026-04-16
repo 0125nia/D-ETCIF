@@ -1,6 +1,12 @@
+// Package controller
+// D-ETCIF-backend/internal/controller/ipython.go
 package controller
 
 import (
+	"net/http"
+	"strconv"
+	"strings"
+
 	"D-ETCIF-backend/internal/model"
 	"D-ETCIF-backend/internal/service"
 	"D-ETCIF-backend/pkg/utils"
@@ -9,31 +15,57 @@ import (
 )
 
 type IPythonController struct {
-	fbs *service.FeedbackService
+	executionLogService *service.ExecutionLogService
 }
 
 func NewIPythonController() *IPythonController {
 	return &IPythonController{
-		fbs: service.NewFeedbackService(),
+		executionLogService: service.NewExecutionLogService(),
 	}
 }
 
 func (ipc *IPythonController) CollectMsgFromIPython(c *gin.Context) {
 	var log model.ExecutionLog
-
 	if err := c.ShouldBindJSON(&log); err != nil {
-		c.JSON(400, gin.H{"error": err.Error()})
+		utils.BadRequest(c, "无效的参数")
 		return
 	}
 
-	// 1. 实时反馈引擎：根据预设规则检查代码和错误，生成反馈
-	ipc.fbs.RealtimeFeedback(&log)
+	userIDValue, exists := c.Get("userID")
+	if !exists {
+		utils.Unauthorized(c, "未授权")
+		return
+	}
 
-	// 2. 策略引导引擎：如果连续多次失败，触发策略反馈
-	ipc.fbs.StrategyFeedback(&log)
+	userID, ok := userIDValue.(int64)
+	if !ok {
+		utils.Unauthorized(c, "用户身份无效")
+		return
+	}
 
-	// 存入 MySQL 或 Neo4j，用于后续的评价算法
-	utils.Infof("%+v", log)
-	utils.Infof("收到执行数据: Cell #%d, 成功: %v", log.ExecutionCount, log.Success)
-	c.JSON(200, gin.H{"status": "captured"})
+	authStudentID := strconv.FormatInt(userID, 10)
+	if strings.TrimSpace(log.StudentID) != "" && strings.TrimSpace(log.StudentID) != authStudentID {
+		c.JSON(http.StatusForbidden, utils.Response{
+			Code:    http.StatusForbidden,
+			Message: "studentId 与登录身份不一致",
+			Data:    nil,
+		})
+		return
+	}
+	log.StudentID = authStudentID
+
+	if strings.TrimSpace(log.ExperimentID) == "" {
+		utils.BadRequest(c, "experimentId 不能为空")
+		return
+	}
+
+	if err := ipc.executionLogService.Save(&log); err != nil {
+		utils.InternalServerError(c, "执行日志保存失败")
+		return
+	}
+
+	service.GlobalExecutionLogBus.Publish(&log)
+
+	utils.Infof("收到执行数据: student=%s experiment=%s cell=%d success=%v", log.StudentID, log.ExperimentID, log.ExecutionCount, log.Success)
+	utils.Success(c, gin.H{"status": "captured"})
 }

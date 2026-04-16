@@ -2,20 +2,20 @@
 // D-ETCIF-backend/internal/controller/feedback.go
 package controller
 
-import (
-	"D-ETCIF-backend/internal/config"
-	"D-ETCIF-backend/internal/service"
+// import (
+// 	"D-ETCIF-backend/internal/config"
+// 	"D-ETCIF-backend/internal/service"
 
-	"github.com/gin-gonic/gin"
-)
+// 	"github.com/gin-gonic/gin"
+// )
 
-type FeedbackController struct {
-	ruleService *service.RuleService
-}
+// type FeedbackController struct {
+// 	ruleService *service.RuleService
+// }
 
-func NewFeedbackController() *FeedbackController {
-	return &FeedbackController{ruleService: service.NewRuleService(config.DB)}
-}
+// func NewFeedbackController() *FeedbackController {
+// 	return &FeedbackController{ruleService: service.NewRuleService(config.DB)}
+// }
 
-func CollectMsgFromIPython(c *gin.Context) {
-}
+// func CollectMsgFromIPython(c *gin.Context) {
+// }
