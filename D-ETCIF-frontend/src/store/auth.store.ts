@@ -28,7 +28,7 @@ interface AuthState {
   setNav: (nav: ActiveNav) => void;
 }
 
-export const useAuthStore = create<AuthState>((set, _) => ({
+export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   token: null,
   activeNav: "experiment",
@@ -36,12 +36,22 @@ export const useAuthStore = create<AuthState>((set, _) => ({
   initFromStorage: () => {
     const token = localStorage.getItem(STORAGE_KEYS.token);
     const role = localStorage.getItem(STORAGE_KEYS.role) as UserRole | null;
+    const userStr = localStorage.getItem(STORAGE_KEYS.user);
 
     if (!token || !role) return;
 
+    let user = null;
+    if (userStr) {
+      try {
+        user = JSON.parse(userStr);
+      } catch (e) {
+        console.error("解析用户信息失败", e);
+      }
+    }
+
     set({
       token,
-      user: { id: 0, user_number: "", name: "", role },
+      user,
     });
   },
 
@@ -49,16 +59,20 @@ export const useAuthStore = create<AuthState>((set, _) => ({
   loginSuccess: ({ token, role, user }) => {
     localStorage.setItem(STORAGE_KEYS.token, token);
     localStorage.setItem(STORAGE_KEYS.role, role);
+    if (user) {
+      localStorage.setItem(STORAGE_KEYS.user, JSON.stringify(user));
+    }
 
     set({
       token,
-      user: user ?? { id: 0, user_number: "", name: "", role },
+      user: user ?? null,
     });
   },
 
   logout: () => {
     localStorage.removeItem(STORAGE_KEYS.token);
     localStorage.removeItem(STORAGE_KEYS.role);
+    localStorage.removeItem(STORAGE_KEYS.user);
     set({ user: null, token: null, activeNav: "experiment" });
   },
 
