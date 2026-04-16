@@ -6,6 +6,9 @@ export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 export const API = {
   login: "/api/auth/login",
   student: {
+    feedback: {
+      list: "/api/student/feedback",
+    },
     profile: {
       cognitiveMap: "/api/student/profile/cognitive-map",
       studyReport: "/api/student/profile/report",
@@ -39,6 +42,9 @@ export const API = {
     uploadReport: "/api/student/experiment/upload-report", // 通常上传路径是固定的，ID 放在 FormData 里
   },
   teacher: {
+    experiment: {
+      details: "/api/teacher/experiment/details",
+    },
     report: {
       // 全班概览
       results: (expId: number | string) =>

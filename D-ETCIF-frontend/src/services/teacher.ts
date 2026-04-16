@@ -1,15 +1,25 @@
 import { request } from "@/services/requests";
 import { API } from "./api";
+import type { ExperimentItem } from "@/types/experiment";
 import type { StudentExperimentOverview, StudentResultDetail } from "@/types";
+
+/**
+ * 获取教师端实验列表
+ */
+export async function getTeacherExperimentList(): Promise<ExperimentItem[]> {
+  const res = await request.get<ExperimentItem[]>(API.teacher.experiment.details);
+  return res;
+}
 
 /**
  * 获取全班实验概览
  * @param experimentId 实验ID
  */
-export async function getAllStudentResults(experimentId: number | string) {
-  return request.get<{ data: StudentExperimentOverview[] }>(
+export async function getAllStudentResults(experimentId: number | string): Promise<StudentExperimentOverview[]> {
+  const res = await request.get<StudentExperimentOverview[]>(
     API.teacher.report.results(experimentId),
   );
+  return res;
 }
 
 /**
@@ -20,13 +30,14 @@ export async function getAllStudentResults(experimentId: number | string) {
 export async function getStudentResultDetail(
   studentId: number,
   experimentId: number,
-) {
-  return request.get<StudentResultDetail>(API.teacher.report.detail, {
+): Promise<StudentResultDetail> {
+  const res = await request.get<StudentResultDetail>(API.teacher.report.detail, {
     params: {
       student_id: studentId,
       experiment_id: experimentId,
     },
   });
+  return res;
 }
 
 /**

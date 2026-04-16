@@ -4,3 +4,4 @@ export * from "./requests";
 export * from "./teacher";
 export * from "./help";
 export * from "./profile";
+export * from "./feedback";

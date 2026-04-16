@@ -1,10 +1,28 @@
 // Package services
 // D-ETCIF-frontend/src/services/requests.ts
 import axios from "axios";
+import type { AxiosInstance, AxiosRequestConfig } from "axios";
 import { STORAGE_KEYS } from "@/constants/storage";
 import { API_BASE_URL } from "@/services/api";
 
-export const request = axios.create({
+// 自定义Axios实例类型，确保TypeScript知道我们的拦截器已经处理了响应数据
+type CustomAxiosInstance = {
+  <T = any>(config: AxiosRequestConfig): Promise<T>;
+  get<T = any>(url: string, config?: AxiosRequestConfig): Promise<T>;
+  post<T = any>(
+    url: string,
+    data?: any,
+    config?: AxiosRequestConfig,
+  ): Promise<T>;
+  put<T = any>(
+    url: string,
+    data?: any,
+    config?: AxiosRequestConfig,
+  ): Promise<T>;
+  delete<T = any>(url: string, config?: AxiosRequestConfig): Promise<T>;
+} & Omit<AxiosInstance, "get" | "post" | "put" | "delete">;
+
+const instance = axios.create({
   baseURL: API_BASE_URL,
   timeout: 5000,
 });
@@ -12,7 +30,7 @@ export const request = axios.create({
 /**
  * request 拦截
  */
-request.interceptors.request.use((config) => {
+instance.interceptors.request.use((config) => {
   const token = localStorage.getItem(STORAGE_KEYS.token);
 
   if (token) {
@@ -25,8 +43,13 @@ request.interceptors.request.use((config) => {
 /**
  * response 拦截
  */
-request.interceptors.response.use(
+instance.interceptors.response.use(
   (res) => {
+    // 统一处理响应数据，直接返回业务数据
+    // 检查响应是否包含 data 字段
+    if (res.data && typeof res.data === "object" && "data" in res.data) {
+      return res.data.data;
+    }
     return res.data;
   },
   (err) => {
@@ -42,3 +65,5 @@ request.interceptors.response.use(
     return Promise.reject(err);
   },
 );
+
+export const request = instance as CustomAxiosInstance;
