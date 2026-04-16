@@ -1,9 +1,9 @@
 // Package base
 // D-ETCIF-frontend/src/components/base/StageTag.tsx
 import { useAuthStore, useExperimentStore } from "@/store";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/common";
-import { toast } from "@/store";
+
 import { useState } from "react";
 
 const StageTag = () => {
@@ -16,8 +16,21 @@ const StageTag = () => {
     checkCanMoveToPost,
   } = useExperimentStore();
   const navigate = useNavigate();
+  const location = useLocation();
   const [loading, setLoading] = useState(false);
-  if (user?.role === "teacher" || !currentStage) {
+
+  // 检查当前路径是否在实验的三个阶段页面
+  const isExperimentStagePage =
+    location.pathname.includes("/student/lab/pre/") ||
+    location.pathname.includes("/student/lab/doing/") ||
+    location.pathname.includes("/student/lab/post/");
+
+  if (
+    user?.role === "teacher" ||
+    !currentStage ||
+    !currentExperimentId ||
+    !isExperimentStagePage
+  ) {
     return null;
   }
 
@@ -41,9 +54,7 @@ const StageTag = () => {
           finishExperiment();
           navigate(`/student/lab/post/${labId}`);
         } else {
-          toast.error(
-            "系统检测到您的实验任务尚未达标，请参考右侧反馈建议继续完善。",
-          );
+          navigate(`/student/lab/post/${labId}`);
         }
       } finally {
         setLoading(false); // 关闭 loading

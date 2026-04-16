@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Card, Button } from "@/components/common";
 import { toast } from "@/store"; // 使用项目统一的 toast
 import { uploadExperimentReport } from "@/services/experiment";
+import { trackPostEvent } from "@/services/tracker";
 import { useParams } from "react-router-dom";
 
 export default function ReportUpload() {
@@ -45,6 +46,13 @@ export default function ReportUpload() {
       formData.append("experimentId", experimentId);
 
       await uploadExperimentReport(formData);
+
+      trackPostEvent({
+        experiment_id: experimentId,
+        action_type: "post_report_submit",
+        score: 0,
+        content: `实验报告上传：${file.name}`,
+      }).catch(console.error);
 
       toast.success("报告上传成功！");
       setUploadProgress("success");
