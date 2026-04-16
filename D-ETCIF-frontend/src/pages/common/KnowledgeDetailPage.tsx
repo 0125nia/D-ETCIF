@@ -47,7 +47,6 @@ const FRONTEND_KNOWLEDGE_LIST: KnowledgeItem[] = [
   },
 ];
 
-// 模拟请求（优先前端配置，以后可换成真实接口）
 const fetchKnowledgeByKey = async (
   name: string,
 ): Promise<KnowledgeItem | null> => {
@@ -56,9 +55,6 @@ const fetchKnowledgeByKey = async (
   const found = FRONTEND_KNOWLEDGE_LIST.find((item) => item.name === name);
   if (found) return found;
 
-  // 这里以后可以加后端请求逻辑
-  // const res = await fetch(`/api/knowledge/${name}`)
-  // return await res.json()
 
   return null;
 };

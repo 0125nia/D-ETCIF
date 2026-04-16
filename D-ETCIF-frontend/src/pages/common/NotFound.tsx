@@ -6,7 +6,7 @@ import { useAuthStore } from "@/store";
 
 export default function NotFound() {
   const navigate = useNavigate();
-  const role = useAuthStore((s) => s.role);
+  const role = useAuthStore((s) => s.user?.role);
 
   const goBack = () => {
     // 逻辑：优先回自己的主页，没登录回登录页
