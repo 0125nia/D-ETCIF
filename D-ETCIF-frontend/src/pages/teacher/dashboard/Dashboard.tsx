@@ -70,9 +70,10 @@ export default function Dashboard() {
           getBehaviorData(),
           getWarningData(),
         ]);
-        setHeatmap(hRes.data.data);
-        setBehavior(bRes.data.data);
-        setWarning(wRes.data.data);
+
+        setHeatmap(hRes);
+        setBehavior(bRes);
+        setWarning(wRes);
       } catch (err) {
         console.error("Dashboard fetch error:", err);
       } finally {

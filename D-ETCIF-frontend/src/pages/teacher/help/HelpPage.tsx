@@ -15,12 +15,13 @@ export default function HelpPage() {
   const fetchList = async () => {
     setLoading(true);
     try {
-      const { data } = await getTeacherHelpList();
+      const res = await getTeacherHelpList();
+      const { details } = res;
 
-      setHelpList(data.details || []);
+      setHelpList(details || []);
 
-      if (data.details?.length > 0 && !selectedHelp) {
-        setSelectedHelp(data.details[0]);
+      if (details?.length > 0 && !selectedHelp) {
+        setSelectedHelp(details[0]);
       }
     } catch (error) {
       console.error("加载求助列表失败", error);

@@ -2,7 +2,8 @@
 // D-ETCIF-frontend/src/pages/teacher/correct/Correct.tsx
 import { useState, useEffect } from "react";
 import { PageContainer, Card, Button } from "@/components/common";
-import { getAllStudentResults, getExperimentList } from "@/services";
+import { getAllStudentResults } from "@/services";
+import { getTeacherExperimentList } from "@/services/teacher";
 import type { StudentExperimentOverview } from "@/types/experimentRes";
 import type { ExperimentItem } from "@/types/experiment";
 import { CorrectDetail } from "@/components/teacher";
@@ -88,14 +89,10 @@ export default function Correct() {
 
   const [viewingStudent, setViewingStudent] = useState<number | null>(null);
   useEffect(() => {
-    // // 直接用假数据，注释原请求即可
-    // setExperiments(mockExpList);
-    // setSelectedExpId(mockExpList[0]?.experiment_id ?? null);
-    getExperimentList().then((res) => {
-      // res 是 AxiosResponse，res.data 才是 ExperimentItem[]
-      setExperiments(res.data);
-      if (res.data.length > 0) {
-        setSelectedExpId(res.data[0].experiment_id);
+    getTeacherExperimentList().then((experimentsData) => {
+      setExperiments(experimentsData ?? []);
+      if ((experimentsData?.length ?? 0) > 0) {
+        setSelectedExpId(experimentsData[0].experiment_id);
       }
     });
   }, []);
@@ -106,8 +103,7 @@ export default function Correct() {
       setLoading(true);
       getAllStudentResults(selectedExpId)
         .then((res) => {
-          // 第一个 .data 是 Axios 的，第二个 .data 是你后端定义的 {"data": []}
-          setStudentList(res.data.data);
+          setStudentList(res ?? []);
         })
         .finally(() => setLoading(false));
     }
@@ -153,7 +149,7 @@ export default function Correct() {
                   >
                     <td className="p-3 text-gray-700">#{student.user_id}</td>
                     <td className="p-3 font-medium text-gray-900">
-                      {student.username || "未知姓名"}
+                      {student.username || ""}
                     </td>
                     <td className="p-3">
                       <StageBadge stage={student.current_stage} />
