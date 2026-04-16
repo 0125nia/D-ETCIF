@@ -14,16 +14,21 @@ export default function DoingStageRight() {
     return severity === "warning" ? "🟠" : "🔴";
   };
 
+  // 过滤反馈列表，只显示及时反馈和路径推荐（即 "即时提醒" 和 "思路引导"）
+  const filteredFeedbackList = feedbackList.filter(
+    (item) => item.type === "即时提醒" || item.type === "思路引导"
+  );
+
   return (
     <div className="flex flex-col gap-5 h-full">
       <Card
-        title={`反馈列表 (${feedbackList.length})`}
+        title={`反馈列表 (${filteredFeedbackList.length})`}
         className="flex-1 overflow-hidden rounded-xl border-0 shadow-sm"
       >
         <div className="p-5 h-full overflow-y-auto">
-          {feedbackList.length > 0 ? (
+          {filteredFeedbackList.length > 0 ? (
             <div className="space-y-3">
-              {feedbackList.map((item) => (
+              {filteredFeedbackList.map((item) => (
                 <div
                   key={item.id}
                   onClick={() => FeedbackModal.show(item)}

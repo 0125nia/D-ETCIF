@@ -15,12 +15,16 @@ export default function PostStageScore({ score }: { score: number | null }) {
 
   useEffect(() => {
     const fetchOperationScore = async () => {
-      if (!experimentId) return;
+      if (!experimentId) {
+        setLoading(false);
+        return;
+      }
       try {
-        // ✅ 使用服务层函数
+
         const res = await getOperationResult(experimentId);
-        if (res.data?.data) {
-          setExpOperationScore(res.data.data.operation_score || 0);
+        console.log("获取操作评分结果:", res);
+        if (res) {
+          setExpOperationScore(res.operation_score || 40);
         }
       } catch (err) {
         console.error("获取操作评分失败", err);

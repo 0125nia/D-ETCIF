@@ -2,8 +2,10 @@
 // D-ETCIF-frontend/src/components/student/stage/post/PostStageExam.tsx
 import Card from "@/components/common/Card";
 import Button from "@/components/common/Button";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { getPostExperimentQuestions } from "@/services/experiment";
+import { trackPostEvent } from "@/services/tracker";
+import { useExperimentStore } from "@/store/experiment.store";
 import type { PostExamRaw, PostExamParsed } from "@/types/experimentData";
 import { toast } from "@/store";
 import eventBus from "@/utils/eventBus";
@@ -14,12 +16,51 @@ export default function PostStageExam() {
   const [score, setScore] = useState<number | null>(null);
   const [results, setResults] = useState<Record<number, boolean>>({});
   const [loading, setLoading] = useState(true);
+  const currentExperimentId = useExperimentStore(
+    (state) => state.currentExperimentId,
+  );
+  const sessionStartRef = useRef<number>(Date.now());
+  const activeQuestionRef = useRef<{ id: number; startAt: number } | null>(null);
+  const hasSubmittedRef = useRef(false);
+
+  const getExperimentId = () =>
+    currentExperimentId ? currentExperimentId.toString() : "unknown";
+
+  const reportQuestionDwell = (questionId: number, durationMs: number) => {
+    if (durationMs < 300) return;
+    trackPostEvent({
+      experiment_id: getExperimentId(),
+      action_type: "post_quiz_question_dwell",
+      score: 0,
+      content: `question_id=${questionId};duration_ms=${durationMs}`,
+    }).catch(console.error);
+  };
+
+  const flushActiveQuestionDwell = () => {
+    const active = activeQuestionRef.current;
+    if (!active) return;
+    const durationMs = Date.now() - active.startAt;
+    reportQuestionDwell(active.id, durationMs);
+    activeQuestionRef.current = null;
+  };
+
+  const reportSessionDwell = () => {
+    const durationMs = Date.now() - sessionStartRef.current;
+    if (durationMs < 300) return;
+    trackPostEvent({
+      experiment_id: getExperimentId(),
+      action_type: "post_quiz_session_dwell",
+      score: 0,
+      content: `duration_ms=${durationMs}`,
+    }).catch(console.error);
+  };
 
   // 初始化加载后端数据
   useEffect(() => {
     getPostExperimentQuestions()
       .then((res) => {
-        const rawData: PostExamRaw[] = res.data.data || [];
+        // 检查响应结构，根据实际返回的数据格式调整
+        const rawData: PostExamRaw[] = Array.isArray(res) ? res : (res.data || []);
         const parsedData: PostExamParsed[] = rawData.map((q) => {
           let options: string[] = [];
           if (q.options) {
@@ -39,19 +80,48 @@ export default function PostStageExam() {
           };
         });
         setQuestions(parsedData);
+
+        trackPostEvent({
+          experiment_id: getExperimentId(),
+          action_type: "post_quiz_enter",
+          score: 0,
+          content: `question_count=${parsedData.length}`,
+        }).catch(console.error);
       })
       .catch(() => toast.error("获取小测题目失败"))
       .finally(() => setLoading(false));
   }, []);
 
+  useEffect(() => {
+    return () => {
+      flushActiveQuestionDwell();
+      if (!hasSubmittedRef.current) {
+        reportSessionDwell();
+      }
+    };
+  }, []);
+
   // 统一处理答案变更逻辑（包含单选和填空）
   const handleAnswerChange = (qid: number, value: string) => {
+    const now = Date.now();
+    const active = activeQuestionRef.current;
+    if (!active) {
+      activeQuestionRef.current = { id: qid, startAt: now };
+    } else if (active.id !== qid) {
+      reportQuestionDwell(active.id, now - active.startAt);
+      activeQuestionRef.current = { id: qid, startAt: now };
+    }
+
     setAnswers((prev) => ({ ...prev, [qid]: value }));
   };
 
   // 提交评分逻辑
   const handleSubmit = () => {
     if (questions.length === 0) return;
+
+    flushActiveQuestionDwell();
+    reportSessionDwell();
+    hasSubmittedRef.current = true;
 
     let correctCount = 0;
     const resultDetails: Record<number, boolean> = {};
@@ -69,6 +139,13 @@ export default function PostStageExam() {
     setScore(totalScore);
     toast.success(`提交成功！成绩：${totalScore}分`);
 
+    trackPostEvent({
+      experiment_id: getExperimentId(),
+      action_type: "post_quiz_submit",
+      score: totalScore,
+      content: `小测提交：${correctCount}/${questions.length}`,
+    }).catch(console.error);
+
     // 通知系统更新成绩状态
     eventBus.emit("examScoreUpdate", {
       score: totalScore,
@@ -78,6 +155,9 @@ export default function PostStageExam() {
 
   // 重置考试
   const handleReset = () => {
+    activeQuestionRef.current = null;
+    hasSubmittedRef.current = false;
+    sessionStartRef.current = Date.now();
     setAnswers({});
     setScore(null);
     setResults({});

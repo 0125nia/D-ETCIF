@@ -7,6 +7,7 @@ import {
   getExperimentSummary,
   submitExperimentSummary,
 } from "@/services/experiment";
+import { trackPostEvent } from "@/services/tracker";
 import { useParams } from "react-router-dom";
 import { toast } from "@/store";
 
@@ -24,18 +25,23 @@ export default function PostStageSummary() {
 
   useEffect(() => {
     const fetchDraft = async () => {
-      if (!experimentId) return;
+      if (!experimentId) {
+        setLoading(false);
+        return;
+      }
       try {
         setLoading(true);
         // ✅ 使用服务层函数
-        const res = await getExperimentSummary(experimentId);
-        if (res.data?.data) {
-          const { learning_content, problems_solved, status } = res.data.data;
-          setSummary({
-            learning_content: learning_content || "",
-            problems_solved: problems_solved || "",
-          });
-          if (status === "submitted") setIsSubmitted(true);
+        const summaryData = await getExperimentSummary(experimentId);
+        if (summaryData) {
+          const summary = summaryData;
+          if (summary) {
+            setSummary({
+              learning_content: summary.learning_content || "",
+              problems_solved: summary.problems_solved || "",
+            });
+            if (summary.status === "submitted") setIsSubmitted(true);
+          }
         }
       } catch (err) {
         console.error("获取草稿失败", err);
@@ -57,6 +63,13 @@ export default function PostStageSummary() {
       });
 
       if (actionType === "submit") {
+        trackPostEvent({
+          experiment_id: experimentId,
+          action_type: "post_reflection_submit",
+          score: 0,
+          content:
+            `实验总结提交：${summary.learning_content} ${summary.problems_solved}`.trim(),
+        }).catch(console.error);
         setIsSubmitted(true);
         toast.success("实验总结已提交，不可更改");
       } else {
