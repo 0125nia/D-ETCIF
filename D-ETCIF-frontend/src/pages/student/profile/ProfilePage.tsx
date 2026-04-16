@@ -33,9 +33,9 @@ export default function ProfilePage() {
           getStudyReport(),
           getRecommendations(),
         ]);
-        setMapData(resMap.data.data);
-        setReport(resReport.data.data);
-        setRecommendations(resRec.data.data);
+        setMapData(resMap);
+        setReport(resReport);
+        setRecommendations(resRec);
       } catch (err) {
         console.error("Profile data fetch failed", err);
       } finally {

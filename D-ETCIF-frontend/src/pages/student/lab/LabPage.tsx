@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { getExperimentList, getExperimentStages } from "@/services/experiment";
 import { useEffect } from "react";
 import type { ExperimentWithStage, Stage } from "@/types/experiment";
+import { toast } from "@/store";
 
 const difficultyMap: Record<number, string> = {
   1: "入门",
@@ -38,23 +39,26 @@ export default function LabPage() {
           getExperimentList(),
           getExperimentStages(),
         ]);
-        const expList = expData.data;
+
+        // 确保 expData 是数组
+        const expList = Array.isArray(expData) ? expData : [];
         const stageList = stageData;
 
         // 合并数据 → 只用于展示，不存多余状态
-        const merged = expList.map((exp) => {
+        const merged = expList.map((exp: any) => {
           const stageItem = stageList.find(
-            (s) => s.experiment_id === exp.experiment_id,
+            (s: any) => s.experiment_id === exp.experiment_id,
           );
           return {
             ...exp,
             stage: stageItem?.current_stage || "PRE",
-          };
+          } as ExperimentWithStage;
         });
 
         setExperiments(merged);
       } catch (err) {
         console.error("加载实验失败", err);
+        toast.error("加载实验失败，请稍后重试。");
       } finally {
         setLoading(false);
       }
@@ -65,22 +69,47 @@ export default function LabPage() {
 
   const handleEnter = async (exp: ExperimentWithStage) => {
     try {
-      // 1. 调用 enter 接口
-      await enterExperiment(exp.experiment_id);
+      // 1. 调用 enter 接口，获取当前阶段
+      const response = await enterExperiment(exp.experiment_id);
+      console.log("Enter experiment response:", response);
 
-      // 2. 更新全局状态
-      storeEnter(exp.experiment_id);
+      // 处理不同的响应格式
+      let currentStage = exp.stage;
+      if (response) {
+        let stageNum: number | undefined;
+        if (response.current_stage) {
+          stageNum = response.current_stage;
+        } else if (response.current_stage) {
+          stageNum = response.current_stage;
+        }
+
+        // 将数字类型的阶段转换为Stage类型
+        if (stageNum) {
+          if (stageNum === 1) {
+            currentStage = "PRE";
+          } else if (stageNum === 2) {
+            currentStage = "DOING";
+          } else if (stageNum === 3) {
+            currentStage = "POST";
+          }
+        }
+      }
+      console.log("Current stage:", currentStage);
+
+      // 2. 更新全局状态，传入实际的阶段
+      storeEnter(exp.experiment_id, currentStage);
 
       // 3. 根据当前阶段 → 跳对应页面
-      if (exp.stage === "PRE") {
-        navigate(`/lab/pre/${exp.experiment_id}`);
-      } else if (exp.stage === "DOING") {
-        navigate(`/lab/doing/${exp.experiment_id}`);
-      } else if (exp.stage === "POST") {
-        navigate(`/lab/post/${exp.experiment_id}`);
+      if (currentStage === "PRE") {
+        navigate(`/student/lab/pre/${exp.experiment_id}`);
+      } else if (currentStage === "DOING") {
+        navigate(`/student/lab/doing/${exp.experiment_id}`);
+      } else if (currentStage === "POST") {
+        navigate(`/student/lab/post/${exp.experiment_id}`);
       }
     } catch (err) {
       console.error("进入实验失败", err);
+      toast.error("进入实验失败，请稍后重试。");
     }
   };
 
