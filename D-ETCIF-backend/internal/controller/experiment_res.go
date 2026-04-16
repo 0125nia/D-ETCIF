@@ -32,16 +32,17 @@ func (e *ExperimentResultController) GetExperimentSummary(ctx *gin.Context) {
 
 	summary, err := e.ers.GetSummary(userID.(int64), expID)
 	if err != nil {
-		ctx.JSON(200, gin.H{"data": nil}) // 没找到不报错，返回空即可
+		utils.Success(ctx, nil) // 没找到不报错，返回空即可
 		return
 	}
-	ctx.JSON(200, gin.H{"data": summary})
+	utils.Success(ctx, summary)
 }
 
 // SaveExperimentSummary 保存或提交总结
 func (e *ExperimentResultController) SaveExperimentSummary(ctx *gin.Context) {
 	userID, _ := ctx.Get("userID")
 	expID, _ := utils.ParseInt64WithErr(ctx.Param("experiment_id"))
+	uid := userID.(int64)
 
 	var req struct {
 		LearningContent string `json:"learning_content"`
@@ -49,7 +50,7 @@ func (e *ExperimentResultController) SaveExperimentSummary(ctx *gin.Context) {
 		Action          string `json:"action"` // "save" 或 "submit"
 	}
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(400, gin.H{"error": "参数错误"})
+		utils.BadRequest(ctx, "参数错误")
 		return
 	}
 
@@ -59,7 +60,7 @@ func (e *ExperimentResultController) SaveExperimentSummary(ctx *gin.Context) {
 	}
 
 	summary := &model.ExperimentSummary{
-		UserID:          userID.(int64),
+		UserID:          uid,
 		ExperimentID:    expID,
 		LearningContent: req.LearningContent,
 		ProblemsSolved:  req.ProblemsSolved,
@@ -67,10 +68,14 @@ func (e *ExperimentResultController) SaveExperimentSummary(ctx *gin.Context) {
 	}
 
 	if err := e.ers.SaveSummary(summary); err != nil {
-		ctx.JSON(500, gin.H{"error": "保存失败"})
+		utils.InternalServerError(ctx, "保存失败")
 		return
 	}
-	ctx.JSON(200, gin.H{"message": "操作成功"})
+
+	if req.Action == "submit" {
+		service.PublishSummarySubmitted(fmt.Sprint(uid), fmt.Sprint(expID), status, req.LearningContent, req.ProblemsSolved)
+	}
+	utils.Success(ctx, gin.H{"message": "操作成功"})
 }
 
 // GetOperationResult 获取操作阶段分数
@@ -81,10 +86,10 @@ func (e *ExperimentResultController) GetOperationResult(ctx *gin.Context) {
 	result, err := e.ers.GetOperationScore(userID.(int64), expID)
 	if err != nil {
 		// 如果没找到，可能实验还没开始，默认给个45分作为基准或0分
-		ctx.JSON(200, gin.H{"data": gin.H{"operation_score": 45.0}})
+		utils.Success(ctx, gin.H{"operation_score": 45.0})
 		return
 	}
-	ctx.JSON(200, gin.H{"data": result})
+	utils.Success(ctx, result)
 }
 
 // UploadReport 上传报告文件
@@ -96,7 +101,7 @@ func (e *ExperimentResultController) UploadReport(ctx *gin.Context) {
 
 	dst := fmt.Sprintf("./static/uploads/%d_%d_%s", uid, expID, file.Filename)
 	if err := ctx.SaveUploadedFile(file, dst); err != nil {
-		ctx.JSON(500, gin.H{"error": "保存文件失败"})
+		utils.InternalServerError(ctx, "保存文件失败")
 		return
 	}
 
@@ -105,7 +110,8 @@ func (e *ExperimentResultController) UploadReport(ctx *gin.Context) {
 		FileName: file.Filename, FilePath: dst,
 	}
 	e.ers.SaveReportPath(report)
-	ctx.JSON(200, gin.H{"message": "上传成功"})
+	service.PublishReportUploaded(fmt.Sprint(uid), fmt.Sprint(expID), file.Filename, dst)
+	utils.Success(ctx, gin.H{"message": "上传成功"})
 }
 
 // 教师端
@@ -117,8 +123,24 @@ func (e *ExperimentResultController) GetAllStudentResults(ctx *gin.Context) {
 	// 1. 调用原子 Service 获取基础名单
 	studentExps, err := e.es.GetExperimentStagesByExpID(expID)
 	if err != nil {
-		ctx.JSON(500, gin.H{"error": "获取实验名单失败"})
+		utils.InternalServerError(ctx, "获取实验名单失败")
 		return
+	}
+
+	// 1.5 批量查询学生姓名，避免前端 username 为空
+	studentIDs := make([]int64, 0, len(studentExps))
+	for _, se := range studentExps {
+		studentIDs = append(studentIDs, se.UserID)
+	}
+
+	userMap := make(map[int64]string, len(studentIDs))
+	if len(studentIDs) > 0 {
+		var users []model.User
+		if err := config.DB.Where("id IN ?", studentIDs).Find(&users).Error; err == nil {
+			for _, u := range users {
+				userMap[u.ID] = u.Name
+			}
+		}
 	}
 
 	// 2. 调度多次查询，组装概览数据
@@ -126,6 +148,7 @@ func (e *ExperimentResultController) GetAllStudentResults(ctx *gin.Context) {
 	for _, se := range studentExps {
 		overview := model.StudentExperimentOverview{
 			UserID:       se.UserID,
+			Username:     userMap[se.UserID],
 			ExperimentID: se.ExperimentID,
 			CurrentStage: se.Stage, // 来自 experiments 表
 		}
@@ -149,7 +172,7 @@ func (e *ExperimentResultController) GetAllStudentResults(ctx *gin.Context) {
 		overviews = append(overviews, overview)
 	}
 
-	ctx.JSON(200, gin.H{"data": overviews})
+	utils.Success(ctx, overviews)
 }
 
 // GetStudentResultDetail 教师调阅：获取特定学生的所有实验产出
@@ -164,7 +187,7 @@ func (e *ExperimentResultController) GetStudentResultDetail(ctx *gin.Context) {
 	opResult, _ := e.ers.GetOperationScore(targetUserID, expID)
 
 	// 组装返回
-	ctx.JSON(200, gin.H{
+	utils.Success(ctx, gin.H{
 		"student_id":       targetUserID,
 		"experiment_id":    expID,
 		"summary":          summary,

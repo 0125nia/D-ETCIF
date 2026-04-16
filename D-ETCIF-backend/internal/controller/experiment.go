@@ -24,10 +24,10 @@ func NewExperimentController() *ExperimentController {
 func (c *ExperimentController) GetExperimentDetails(ctx *gin.Context) {
 	details, err := c.es.GetExperimentDetails()
 	if err != nil {
-		ctx.JSON(500, gin.H{"error": "获取实验详情失败"})
+		utils.InternalServerError(ctx, "获取实验详情失败")
 		return
 	}
-	ctx.JSON(200, details)
+	utils.Success(ctx, details)
 }
 
 func (c *ExperimentController) GetExperimentStageByUserID(ctx *gin.Context) {
@@ -36,10 +36,10 @@ func (c *ExperimentController) GetExperimentStageByUserID(ctx *gin.Context) {
 
 	experiments, err := c.es.GetExperimentStagesByUserID(userID.(int64))
 	if err != nil {
-		ctx.JSON(500, gin.H{"error": "获取实验阶段失败"})
+		utils.InternalServerError(ctx, "获取实验阶段失败")
 		return
 	}
-	ctx.JSON(200, experiments)
+	utils.Success(ctx, experiments)
 }
 
 func (c *ExperimentController) UpdateExperimentStage(ctx *gin.Context) {
@@ -51,16 +51,16 @@ func (c *ExperimentController) UpdateExperimentStage(ctx *gin.Context) {
 		NewStage     int   `json:"new_stage"`
 	}
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(400, gin.H{"error": "请求参数错误"})
+		utils.BadRequest(ctx, "请求参数错误")
 		return
 	}
 
 	err := c.es.UpdateExperimentStage(userID.(int64), req.ExperimentID, req.NewStage)
 	if err != nil {
-		ctx.JSON(500, gin.H{"error": "更新实验阶段失败"})
+		utils.InternalServerError(ctx, "更新实验阶段失败")
 		return
 	}
-	ctx.JSON(200, gin.H{"message": "实验阶段更新成功"})
+	utils.Success(ctx, gin.H{"message": "实验阶段更新成功"})
 }
 
 func (c *ExperimentController) EnterExperiment(ctx *gin.Context) {
@@ -70,7 +70,7 @@ func (c *ExperimentController) EnterExperiment(ctx *gin.Context) {
 	expIDStr := ctx.Param("experiment_id")
 	experimentID, err := utils.ParseInt64WithErr(expIDStr)
 	if err != nil {
-		ctx.JSON(400, gin.H{"error": "实验ID格式错误"})
+		utils.BadRequest(ctx, "实验ID格式错误")
 		return
 	}
 
@@ -84,10 +84,29 @@ func (c *ExperimentController) EnterExperiment(ctx *gin.Context) {
 			Stage:        1,
 		}
 		c.es.CreateExperiment(newExperiment)
-		ctx.JSON(200, gin.H{"message": "进入实验成功", "current_stage": 1})
+		utils.Success(ctx, gin.H{"message": "进入实验成功", "current_stage": 1})
 		return
 	}
 
 	// 返回当前阶段
-	ctx.JSON(200, gin.H{"current_stage": experiment.Stage})
+	utils.Success(ctx, gin.H{"current_stage": experiment.Stage})
+}
+
+func (c *ExperimentController) CheckDoingStageDone(ctx *gin.Context) {
+	// 获取用户ID
+	userID, _ := ctx.Get("userID")
+
+	expIDStr := ctx.Param("experimentId")
+	experimentID, err := utils.ParseInt64WithErr(expIDStr)
+	if err != nil {
+		utils.BadRequest(ctx, "实验ID格式错误")
+		return
+	}
+
+	canMove, err := c.es.CheckDoingStageDone(userID.(int64), experimentID)
+	if err != nil {
+		utils.InternalServerError(ctx, "检查阶段状态失败")
+		return
+	}
+	utils.Success(ctx, gin.H{"can_move": canMove, "message": "ok"})
 }

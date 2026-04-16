@@ -28,43 +28,43 @@ func (e *ExperimentDataController) GetPreExperimentData(ctx *gin.Context) {
 	expIDStr := ctx.Param("experiment_id")
 	experimentID, err := utils.ParseInt64WithErr(expIDStr)
 	if err != nil {
-		ctx.JSON(400, gin.H{"error": "实验ID格式错误"})
+		utils.BadRequest(ctx, "实验ID格式错误")
 		return
 	}
 	data, err := e.prs.GetPreExperimentData(experimentID)
 	if err != nil {
-		ctx.JSON(500, gin.H{"error": "获取预实验数据失败"})
+		utils.InternalServerError(ctx, "获取预实验数据失败")
 		return
 	}
-	ctx.JSON(200, gin.H{"data": data})
+	utils.Success(ctx, data)
 }
 
 func (e *ExperimentDataController) GetDoingExperimentData(ctx *gin.Context) {
 	expIDStr := ctx.Param("experiment_id")
 	experimentID, err := utils.ParseInt64WithErr(expIDStr)
 	if err != nil {
-		ctx.JSON(400, gin.H{"error": "实验ID格式错误"})
+		utils.BadRequest(ctx, "实验ID格式错误")
 		return
 	}
 	data, err := e.ds.GetDoingExperimentData(experimentID)
 	if err != nil {
-		ctx.JSON(500, gin.H{"error": "获取进行中实验数据失败"})
+		utils.InternalServerError(ctx, "获取进行中实验数据失败")
 		return
 	}
-	ctx.JSON(200, gin.H{"data": data})
+	utils.Success(ctx, data)
 }
 
 func (e *ExperimentDataController) GetPostExperimentData(ctx *gin.Context) {
 	expIDStr := ctx.Param("experiment_id")
 	experimentID, err := utils.ParseInt64WithErr(expIDStr)
 	if err != nil {
-		ctx.JSON(400, gin.H{"error": "实验ID格式错误"})
+		utils.BadRequest(ctx, "实验ID格式错误")
 		return
 	}
 	data, err := e.pos.GetPostExperimentData(experimentID)
 	if err != nil {
-		ctx.JSON(500, gin.H{"error": "获取后续实验数据失败"})
+		utils.InternalServerError(ctx, "获取后续实验数据失败")
 		return
 	}
-	ctx.JSON(200, gin.H{"data": data})
+	utils.Success(ctx, data)
 }

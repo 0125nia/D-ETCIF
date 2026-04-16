@@ -3,8 +3,6 @@
 package controller
 
 import (
-	"net/http"
-
 	"D-ETCIF-backend/internal/config"
 	"D-ETCIF-backend/internal/model"
 	"D-ETCIF-backend/internal/service"
@@ -30,15 +28,15 @@ type LoginRequest struct {
 }
 
 type LoginResponse struct {
-	Token string `json:"token"`
-	User model.User `json:"user"`
+	Token string     `json:"token"`
+	User  model.User `json:"user"`
 }
 
 func (lc *LoginController) Login(c *gin.Context) {
 	var req LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		utils.Errorf("登录请求参数错误: %v", err)
-		c.JSON(http.StatusBadRequest, gin.H{"error": "参数错误"})
+		utils.BadRequest(c, "参数错误")
 		return
 	}
 
@@ -53,14 +51,14 @@ func (lc *LoginController) Login(c *gin.Context) {
 	user, err := lc.userService.GetUserByNumberAndRole(req.Username, targetRole)
 	if err != nil {
 		utils.Errorf("用户登录失败，账号: %s, 角色: %s, 错误: %v", req.Username, req.Role, err)
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "账号错误"})
+		utils.Unauthorized(c, "账号错误")
 		return
 	}
 
 	// 3. 校验密码 (实际存储的是 hash)
 	if err := utils.CheckPassword(user.Password, req.Password); err != nil {
 		utils.Errorf("用户登录失败，ID: %d, 错误: %v", user.ID, err)
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "密码错误"})
+		utils.Unauthorized(c, "密码错误")
 		return
 	}
 
@@ -68,20 +66,20 @@ func (lc *LoginController) Login(c *gin.Context) {
 	token, err := utils.GenerateToken(user.ID, user.Role)
 	if err != nil {
 		utils.Errorf("生成token失败，ID: %d, err: %v", user.ID, err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "登录失败"})
+		utils.InternalServerError(c, "登录失败")
 		return
 	}
 
 	utils.Info("用户登录成功，ID:", user.ID, "角色:", user.Role)
 
 	loginResp := LoginResponse{
-			Token: token,
-			User:  model.User{
-				ID:         user.ID,
-				UserNumber: user.UserNumber,
-				Name:       user.Name,
-				Role:       user.Role,
-			},
-		}
-	c.JSON(http.StatusOK, loginResp)
+		Token: token,
+		User: model.User{
+			ID:         user.ID,
+			UserNumber: user.UserNumber,
+			Name:       user.Name,
+			Role:       user.Role,
+		},
+	}
+	utils.Success(c, loginResp)
 }
