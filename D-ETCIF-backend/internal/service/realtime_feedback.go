@@ -3,7 +3,12 @@
 package service
 
 import (
+	"encoding/json"
+	"os"
+
+	"D-ETCIF-backend/internal/config"
 	"D-ETCIF-backend/internal/model"
+	"D-ETCIF-backend/pkg/utils"
 
 	"github.com/expr-lang/expr"
 	"github.com/expr-lang/expr/vm"
@@ -16,48 +21,44 @@ type CompiledRule struct {
 
 var CompiledRules []CompiledRule
 
-func init() {
-	initEngine()
-}
-
-func initEngine() {
-	SecurityRules := []model.Rule{
-		{
-			Name:      "Dangerous Commands",
-			Condition: "CellContent matches '(?i)rm -rf|os.system|subprocess.call'",
-			Message:   "🚨 检测到高危系统指令！实验环境下禁止执行删除或底层系统调用。",
-			Severity:  "error",
-		},
-		{
-			Name:      "Infinite Loop Risk",
-			Condition: "CellContent matches 'while True' && !(CellContent matches 'break')",
-			Message:   "⚠️ 警告：检测到不含 break 的 while True 循环，可能导致内核卡死。",
-			Severity:  "warning",
-		},
+// InitEngine initializes the rule engine by loading rules from the database.
+// It also seeds the database from configs/rules.json if it's empty.
+func InitEngine() {
+	var rules []model.Rule
+	if err := config.DB.Find(&rules).Error; err != nil {
+		utils.Errorf("Failed to query rules: %v", err)
+		return
 	}
 
-	SyntaxRules := []model.Rule{
-		{
-			Name:      "Indentation Error",
-			Condition: "Error contains 'IndentationError'",
-			Message:   "💡 提示：Python 对缩进非常敏感，请检查冒号后的代码块是否正确缩进。",
-			Severity:  "info",
-		},
-		{
-			Name:      "Name Error",
-			Condition: "Error contains 'is not defined'",
-			Message:   "🔍 变量未定义：请确保你已经运行了定义该变量的 Cell，或者检查单词拼写。",
-			Severity:  "info",
-		},
+	// If no rules exist, seed from rules.json
+	if len(rules) == 0 {
+		data, err := os.ReadFile("configs/rules.json")
+		if err == nil {
+			var seedRules []model.Rule
+			if err := json.Unmarshal(data, &seedRules); err == nil {
+				config.DB.Create(&seedRules)
+				rules = seedRules
+				utils.Info("Seeded rules from rules.json, count:", len(seedRules))
+			} else {
+				utils.Errorf("Failed to parse rules.json: %v", err)
+			}
+		} else {
+			utils.Errorf("Failed to read rules.json: %v", err)
+		}
+	} else {
+		utils.Info("Loaded rules from database, count:", len(rules))
 	}
 
-	allRules := append(SecurityRules, SyntaxRules...)
-	for _, r := range allRules {
+	for _, r := range rules {
 		program, err := expr.Compile(r.Condition)
 		if err == nil {
 			CompiledRules = append(CompiledRules, CompiledRule{Rule: r, Program: program})
+			utils.Info("Compiled rule:", r.Name)
+		} else {
+			utils.Errorf("Failed to compile rule condition '%s': %v", r.Condition, err)
 		}
 	}
+	utils.Info("Total compiled rules:", len(CompiledRules))
 }
 
 func checkRules(env map[string]interface{}) []model.Rule {

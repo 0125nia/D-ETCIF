@@ -1,3 +1,5 @@
+// Package service
+// D-ETCIF-backend/internal/service/path_suggestion.go
 package service
 
 import (
@@ -21,9 +23,10 @@ type knowledgePointSuggestion struct {
 }
 
 type strategySuggestion struct {
-	Title       string
-	Content     string
-	CodeSnippet string
+	Title         string
+	Content       string
+	CodeSnippet   string
+	KnowledgeLink string
 }
 
 func buildStrategySuggestion(ctx context.Context, log *model.ExecutionLog) (*strategySuggestion, error) {
@@ -67,9 +70,10 @@ func buildStrategySuggestion(ctx context.Context, log *model.ExecutionLog) (*str
 			code = "# 建议先回顾前置知识点的示例代码/模板，再回到当前任务"
 		}
 		return &strategySuggestion{
-			Title:       "路径建议：补全前置依赖",
-			Content:     content,
-			CodeSnippet: code,
+			Title:         "路径建议：补全前置依赖",
+			Content:       content,
+			CodeSnippet:   code,
+			KnowledgeLink: fmt.Sprintf("/student/profile?kp=%s", prereqs[0].Name),
 		}, nil
 	}
 
@@ -78,9 +82,10 @@ func buildStrategySuggestion(ctx context.Context, log *model.ExecutionLog) (*str
 	if err2 == nil && len(steps) > 0 {
 		content := fmt.Sprintf("检测到你在当前步骤出现多次失败（实验 %s）。结合你当前代码与错误信息，系统推断你卡在知识点「%s」。可参考班级常用成功推进路径：%s。", experimentID, kpName, strings.Join(steps, " → "))
 		return &strategySuggestion{
-			Title:       "路径建议：班级常用成功路径",
-			Content:     content,
-			CodeSnippet: "# 参考路径仅用于引导：请按实验指导书逐步实现并自测",
+			Title:         "路径建议：班级常用成功路径",
+			Content:       content,
+			CodeSnippet:   "# 参考路径仅用于引导：请按实验指导书逐步实现并自测",
+			KnowledgeLink: fmt.Sprintf("/student/profile?kp=%s", kpName),
 		}, nil
 	}
 
@@ -369,4 +374,84 @@ LIMIT 1
 		return nil, errors.New("empty path")
 	}
 	return steps, nil
+}
+
+type WeakPointResource struct {
+	KnowledgePoint string   `json:"knowledge_point"`
+	Mastery        float64  `json:"mastery"`
+	Resources      []string `json:"resources"`
+}
+
+func QueryWeakPointsAndResources(ctx context.Context, studentID string, threshold float64, limit int) ([]WeakPointResource, error) {
+	if config.Neo4jDriver == nil {
+		return nil, errors.New("neo4j driver not initialized")
+	}
+	if limit <= 0 {
+		limit = 5
+	}
+
+	query := `
+	MATCH (s) WHERE (s:Student OR s:学生) AND (s.id = $studentId OR s.student_id = $studentId OR s.name = $studentId)
+	MATCH (s)-[m]->(kp)
+	WHERE (kp:KnowledgePoint OR kp:知识点) AND type(m) IN ['MASTERED', '掌握', 'CONFIDENCE', '置信', 'WEIGHT', '权重']
+	WITH kp, coalesce(m.weight, m.confidence, 0.0) AS mastery
+	WHERE mastery < $threshold
+	ORDER BY mastery ASC
+	LIMIT $limit
+	OPTIONAL MATCH (kp)-[r]->(res)
+	WHERE type(r) IN ['HAS_EXAMPLE', 'PROVIDES', 'CONTAINS', '有', '提供', '包含'] AND NOT (res:KnowledgePoint OR res:知识点)
+	RETURN kp.name AS kpName, mastery, collect(res.name) AS resources
+	`
+
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	session := config.Neo4jDriver.NewSession(ctx, neo4j.SessionConfig{AccessMode: neo4j.AccessModeRead})
+	defer session.Close(ctx)
+
+	params := map[string]any{
+		"studentId": studentID,
+		"threshold": threshold,
+		"limit":     limit,
+	}
+
+	result, err := session.Run(ctx, query, params)
+	if err != nil {
+		return nil, err
+	}
+
+	var out []WeakPointResource
+	for result.Next(ctx) {
+		record := result.Record()
+		kpName, _ := record.Get("kpName")
+		mastery, _ := record.Get("mastery")
+		resAny, _ := record.Get("resources")
+
+		var resources []string
+		if resArr, ok := resAny.([]any); ok {
+			for _, v := range resArr {
+				if v != nil {
+					resources = append(resources, fmt.Sprint(v))
+				}
+			}
+		}
+
+		mVal := 0.0
+		switch v := mastery.(type) {
+		case float64:
+			mVal = v
+		case int64:
+			mVal = float64(v)
+		}
+
+		out = append(out, WeakPointResource{
+			KnowledgePoint: fmt.Sprint(kpName),
+			Mastery:        mVal,
+			Resources:      resources,
+		})
+	}
+	if err := result.Err(); err != nil {
+		return nil, err
+	}
+	return out, nil
 }
