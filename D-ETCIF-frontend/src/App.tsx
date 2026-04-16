@@ -6,6 +6,7 @@ import Toast from "./components/common/Toast";
 import { AnimatePresence } from "framer-motion";
 import React, { useEffect } from "react";
 import { useAuthStore } from "@/store";
+import { useExperimentStore } from "@/store/experiment.store";
 import { useAuthSession } from "@/app/auth/useAuthSession";
 
 export default function App() {
@@ -15,7 +16,13 @@ export default function App() {
     initFromStorage();
   }, [initFromStorage]);
 
-  // 2) 统一 401 会话处理
+  // 2) 启动时从 localStorage 初始化 experiment store
+  const initExperimentFromStorage = useExperimentStore((s) => s.initFromStorage);
+  useEffect(() => {
+    initExperimentFromStorage();
+  }, [initExperimentFromStorage]);
+
+  // 3) 统一 401 会话处理
   useAuthSession();
 
   const element = useRoutes(routes);
