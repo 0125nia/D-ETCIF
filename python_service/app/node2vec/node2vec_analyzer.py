@@ -11,6 +11,11 @@ from app.core.paths import NODE2VEC_MODEL_PATH, ensure_parent
 # 配置日志
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
+DEFAULT_WEAK_KPS = [
+    "数据可视化的定义与作用",
+    "12种常见可视化图表类型",
+]
+
 
 def build_graph(neo4j_url="bolt://localhost:7687", neo4j_auth=('neo4j', 'password')):
 
@@ -201,6 +206,56 @@ def generate_recommendations(model, node_type, weak_kps, topk=3):
         return {}
 
 
+def infer_weak_knowledge_points(
+    neo4j_url,
+    neo4j_auth,
+    student_id,
+    threshold=0.6,
+    limit=5,
+):
+    """根据学生在图谱中的掌握度关系推断薄弱知识点。"""
+    if limit <= 0:
+        limit = 5
+
+    query = """
+    MATCH (s)
+    WHERE (s:Student OR s:学生)
+      AND (s.id = $studentId OR s.student_id = $studentId OR s.name = $studentId)
+    MATCH (s)-[m]->(kp)
+    WHERE (kp:KnowledgePoint OR kp:知识点)
+      AND type(m) IN ['MASTERED', '掌握', 'CONFIDENCE', '置信', 'WEIGHT', '权重']
+    WITH kp, coalesce(m.score, m.weight, m.confidence, 0.0) AS mastery
+    WHERE mastery < $threshold
+    RETURN coalesce(kp.kpName, kp.name) AS kpName, mastery
+    ORDER BY mastery ASC
+    LIMIT $limit
+    """
+
+    try:
+        graph_db = Graph(neo4j_url, auth=neo4j_auth)
+        rows = graph_db.run(
+            query,
+            studentId=str(student_id),
+            threshold=float(threshold),
+            limit=int(limit),
+        )
+
+        weak_kps = []
+        for row in rows:
+            kp_name = row.get("kpName")
+            if kp_name:
+                weak_kps.append(str(kp_name))
+
+        if not weak_kps:
+            logging.warning("未查询到学生薄弱点，使用默认薄弱点兜底")
+            return DEFAULT_WEAK_KPS[: min(len(DEFAULT_WEAK_KPS), limit)]
+
+        return weak_kps
+    except Exception as e:
+        logging.error(f"推断薄弱知识点失败: {str(e)}")
+        return DEFAULT_WEAK_KPS[: min(len(DEFAULT_WEAK_KPS), limit)]
+
+
 class Node2VecAnalyzer:
     def __init__(self, neo4j_url="bolt://localhost:7687", neo4j_auth=None, model_path=None):
         self.neo4j_url = neo4j_url
@@ -250,6 +305,15 @@ class Node2VecAnalyzer:
         if not os.path.exists(self.model_path):
             self.save_model(self.model_path)
         return generate_recommendations(self.model, self.node_type, weak_kps, topk)
+
+    def infer_weak_knowledge_points(self, student_id, threshold=0.6, limit=5):
+        return infer_weak_knowledge_points(
+            self.neo4j_url,
+            self.neo4j_auth,
+            student_id,
+            threshold=threshold,
+            limit=limit,
+        )
 
 
 if __name__ == "__main__":

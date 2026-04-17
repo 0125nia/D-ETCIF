@@ -46,8 +46,9 @@ app = FastAPI(
 
 # 请求模型
 class RecommendationRequest(BaseModel):
-    weak_kps: list[str]
+    student_id: str
     topk: int = 3
+    weak_threshold: float = 0.6
 
 # 响应模型
 class Resource(BaseModel):
@@ -55,6 +56,7 @@ class Resource(BaseModel):
     score: float
 
 class RecommendationResponse(BaseModel):
+    weak_points: list[str]
     recommendations: dict[str, list[Resource]]
 
 # 健康检查
@@ -67,19 +69,25 @@ def health_check():
 @app.post("/api/v1/recommend", response_model=RecommendationResponse)
 def recommend_resources(request: RecommendationRequest):
     """
-    为薄弱知识点推荐相关课程资源
+    根据 student_id 自动推断薄弱点并推荐资源
     
     Args:
-        weak_kps: 薄弱知识点列表
+        student_id: 学生ID
         topk: 每个知识点推荐的资源数量
     
     Returns:
-        推荐结果，以知识点为键，推荐资源列表为值
+        包含薄弱知识点及其对应推荐资源
     """
     try:
+        weak_points = analyzer.infer_weak_knowledge_points(
+            student_id=request.student_id,
+            threshold=request.weak_threshold,
+            limit=request.topk,
+        )
+
         # 生成推荐（如果模型不存在，会自动训练）
         recommendations = analyzer.generate_recommendations(
-            weak_kps=request.weak_kps,
+            weak_kps=weak_points,
             topk=request.topk
         )
         
@@ -92,7 +100,10 @@ def recommend_resources(request: RecommendationRequest):
             ]
             formatted_recommendations[kp] = formatted_resources
         
-        return RecommendationResponse(recommendations=formatted_recommendations)
+        return RecommendationResponse(
+            weak_points=weak_points,
+            recommendations=formatted_recommendations,
+        )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"推荐过程中出错: {str(e)}")
 
