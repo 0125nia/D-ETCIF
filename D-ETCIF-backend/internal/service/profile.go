@@ -89,7 +89,7 @@ func (s *ProfileService) GetCognitiveMap(ctx context.Context, studentID string) 
 
 	// 查询学生到知识点的掌握/置信/权重关系
 	query := `
-    MATCH (s:Student {id: $studentId})
+    MATCH (s:Student {id: $student_id})
     OPTIONAL MATCH (s)-[m]->(kp)
     WHERE (kp:KnowledgePoint OR kp:知识点) AND type(m) IN $relTypes
     WITH kp, max(coalesce(m.weight, m.confidence, m.score, 0.0)) AS mastery
@@ -103,8 +103,8 @@ func (s *ProfileService) GetCognitiveMap(ctx context.Context, studentID string) 
     LIMIT 100
     `
 	result, err := session.Run(ctx, query, map[string]interface{}{
-		"studentId": studentID,
-		"relTypes":  masteryRelTypes,
+		"student_id": studentID,
+		"relTypes":   masteryRelTypes,
 	})
 	if err != nil {
 		return nil, err
@@ -271,7 +271,7 @@ func (s *ProfileService) getWeakKnowledgePoints(studentID string) ([]string, err
 
 	// 查询学生掌握/置信/权重低于阈值的知识点
 	query := `
-	MATCH (s:Student {id: $studentId})-[m]->(kp)
+	MATCH (s:Student {id: $student_id})-[m]->(kp)
 	WHERE (kp:KnowledgePoint OR kp:知识点) AND type(m) IN $relTypes
 	WITH kp, coalesce(m.weight, m.confidence, m.score, 0.0) AS mastery
 	WITH kp, CASE
@@ -285,8 +285,8 @@ func (s *ProfileService) getWeakKnowledgePoints(studentID string) ([]string, err
 	LIMIT 5
 	`
 	result, err := session.Run(ctx, query, map[string]interface{}{
-		"studentId": studentID,
-		"relTypes":  masteryRelTypes,
+		"student_id": studentID,
+		"relTypes":   masteryRelTypes,
 	})
 	if err != nil {
 		return nil, err
@@ -324,7 +324,7 @@ func (s *ProfileService) callPythonRecommendationService(weakKps []string) ([]mo
 
 	// 发送POST请求到Python服务
 	if cfg.Config == nil || cfg.Config.Python == nil {
-		return nil, errors.New("python service config is not initialized")
+		return nil, errors.New("python service config is not initialized: ensure Python.BaseURL is configured")
 	}
 	baseURL := strings.TrimRight(cfg.Config.Python.BaseURL, "/")
 	if baseURL == "" {

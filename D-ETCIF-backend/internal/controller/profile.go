@@ -31,30 +31,30 @@ func NewProfileController() *ProfileController {
 	}
 }
 
-func resolveStudentID(c *gin.Context) (string, bool) {
+func resolveStudentID(c *gin.Context) (string, string, bool) {
 	studentID, exists := c.Get("userID")
 	if !exists {
-		return "", false
+		return "", "未登录", false
 	}
 	switch id := studentID.(type) {
 	case int64:
-		return fmt.Sprintf("%d", id), true
+		return fmt.Sprintf("%d", id), "", true
 	case int:
-		return fmt.Sprintf("%d", id), true
+		return fmt.Sprintf("%d", id), "", true
 	case string:
 		if id == "" {
-			return "", false
+			return "", "用户标识为空", false
 		}
-		return id, true
+		return id, "", true
 	default:
-		return "", false
+		return "", "用户标识类型无效", false
 	}
 }
 
 func (pc *ProfileController) GetCognitiveMap(c *gin.Context) {
-	studentIDStr, ok := resolveStudentID(c)
+	studentIDStr, reason, ok := resolveStudentID(c)
 	if !ok {
-		utils.Unauthorized(c, "未登录或用户标识无效")
+		utils.Unauthorized(c, reason)
 		return
 	}
 
@@ -79,9 +79,9 @@ func (pc *ProfileController) GetCognitiveMap(c *gin.Context) {
 }
 
 func (pc *ProfileController) GetStudyReport(c *gin.Context) {
-	studentIDStr, ok := resolveStudentID(c)
+	studentIDStr, reason, ok := resolveStudentID(c)
 	if !ok {
-		utils.Unauthorized(c, "未登录或用户标识无效")
+		utils.Unauthorized(c, reason)
 		return
 	}
 
@@ -95,9 +95,9 @@ func (pc *ProfileController) GetStudyReport(c *gin.Context) {
 }
 
 func (pc *ProfileController) GetRecommendations(c *gin.Context) {
-	studentIDStr, ok := resolveStudentID(c)
+	studentIDStr, reason, ok := resolveStudentID(c)
 	if !ok {
-		utils.Unauthorized(c, "未登录或用户标识无效")
+		utils.Unauthorized(c, reason)
 		return
 	}
 	data, err := pc.profileService.GetRecommendations(studentIDStr)

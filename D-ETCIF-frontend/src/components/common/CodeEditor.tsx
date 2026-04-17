@@ -30,7 +30,7 @@ export default function CodeEditor() {
         <iframe src={iframeSrc} className="w-full h-full border-none" title="notebook" />
       ) : (
         <div className="flex h-full items-center justify-center text-sm text-gray-500">
-          未配置 Notebook 地址，请设置 VITE_NOTEBOOK_BASE_URL
+          未配置 Notebook 地址，请设置 VITE_NOTEBOOK_BASE_URL（可选 VITE_NOTEBOOK_PATH）
         </div>
       )}
     </div>
