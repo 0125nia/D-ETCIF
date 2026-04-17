@@ -57,7 +57,7 @@ export default function ReportUpload() {
       toast.success("报告上传成功！");
       setUploadProgress("success");
       setFile(null);
-    } catch (err) {
+    } catch {
       toast.error("上传失败，请稍后重试");
     } finally {
       setLoading(false);

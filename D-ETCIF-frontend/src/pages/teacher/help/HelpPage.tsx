@@ -31,7 +31,17 @@ export default function HelpPage() {
   };
 
   useEffect(() => {
-    fetchList();
+    getTeacherHelpList()
+      .then((res) => {
+        const details = res.details || [];
+        setHelpList(details);
+        if (details.length > 0) {
+          setSelectedHelp(details[0]);
+        }
+      })
+      .catch((error) => {
+        console.error("加载求助列表失败", error);
+      });
   }, []);
 
   return (

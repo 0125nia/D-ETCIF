@@ -17,6 +17,16 @@ interface Props {
   loading: boolean;
 }
 
+interface HeatPointPayload {
+  value: number;
+}
+
+interface HeatPointShapeProps {
+  cx?: number;
+  cy?: number;
+  payload?: HeatPointPayload;
+}
+
 export default function KnowledgeHeatMap({ data, loading }: Props) {
   // 提取章节
   const subjects = Array.from(
@@ -120,12 +130,13 @@ export default function KnowledgeHeatMap({ data, loading }: Props) {
               />
               <Scatter
                 data={chartData}
-                shape={(props: any) => {
-                  const { cx, cy, payload } = props;
+                shape={(props: unknown) => {
+                  const { cx, cy, payload } = props as HeatPointShapeProps;
                   if (typeof cx !== "number" || typeof cy !== "number")
                     return null;
-                  const radius = 10 + (payload.value / 100) * 15;
-                  const status = getStatus(payload.value);
+                  const value = payload?.value ?? 0;
+                  const radius = 10 + (value / 100) * 15;
+                  const status = getStatus(value);
                   return (
                     <circle
                       cx={cx}

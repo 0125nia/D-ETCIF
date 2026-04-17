@@ -10,6 +10,8 @@ import type { PostExamRaw, PostExamParsed } from "@/types/experimentData";
 import { toast } from "@/store";
 import eventBus from "@/utils/eventBus";
 
+const getNowTimestamp = () => Date.now();
+
 export default function PostStageExam() {
   const [questions, setQuestions] = useState<PostExamParsed[]>([]);
   const [answers, setAnswers] = useState<Record<number, string>>({});
@@ -19,7 +21,7 @@ export default function PostStageExam() {
   const currentExperimentId = useExperimentStore(
     (state) => state.currentExperimentId,
   );
-  const sessionStartRef = useRef<number>(Date.now());
+  const sessionStartRef = useRef<number>(0);
   const activeQuestionRef = useRef<{ id: number; startAt: number } | null>(null);
   const hasSubmittedRef = useRef(false);
 
@@ -41,13 +43,13 @@ export default function PostStageExam() {
   const flushActiveQuestionDwell = () => {
     const active = activeQuestionRef.current;
     if (!active) return;
-    const durationMs = Date.now() - active.startAt;
+    const durationMs = getNowTimestamp() - active.startAt;
     reportQuestionDwell(active.id, durationMs);
     activeQuestionRef.current = null;
   };
 
   const reportSessionDwell = () => {
-    const durationMs = Date.now() - sessionStartRef.current;
+    const durationMs = getNowTimestamp() - sessionStartRef.current;
     if (durationMs < 300) return;
     const experimentId = getExperimentId();
     if (!experimentId) return;
@@ -61,10 +63,11 @@ export default function PostStageExam() {
 
   // 初始化加载后端数据
   useEffect(() => {
+    sessionStartRef.current = getNowTimestamp();
     getPostExperimentQuestions()
       .then((res) => {
         // 检查响应结构，根据实际返回的数据格式调整
-        const rawData: PostExamRaw[] = Array.isArray(res) ? res : (res.data || []);
+        const rawData: PostExamRaw[] = Array.isArray(res) ? res : [];
         const parsedData: PostExamParsed[] = rawData.map((q) => {
           let options: string[] = [];
           if (q.options) {
@@ -109,7 +112,7 @@ export default function PostStageExam() {
 
   // 统一处理答案变更逻辑（包含单选和填空）
   const handleAnswerChange = (qid: number, value: string) => {
-    const now = Date.now();
+    const now = getNowTimestamp();
     const active = activeQuestionRef.current;
     if (!active) {
       activeQuestionRef.current = { id: qid, startAt: now };
@@ -165,7 +168,7 @@ export default function PostStageExam() {
   const handleReset = () => {
     activeQuestionRef.current = null;
     hasSubmittedRef.current = false;
-    sessionStartRef.current = Date.now();
+    sessionStartRef.current = getNowTimestamp();
     setAnswers({});
     setScore(null);
     setResults({});

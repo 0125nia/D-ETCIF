@@ -10,6 +10,7 @@ import type {
   ExperimentSummary,
   OperationResult,
   DoingTask,
+  PostExamRaw,
 } from "@/types";
 /**
  * 获取实验前资源列表
@@ -44,14 +45,16 @@ export async function getDoingExperimentContent(): Promise<DoingTask[]> {
 /**
  * 获取实验后题目列表
  */
-export async function getPostExperimentQuestions() {
+export async function getPostExperimentQuestions(): Promise<PostExamRaw[]> {
   const experimentId = useExperimentStore.getState().currentExperimentId;
 
   if (!experimentId) {
     return Promise.reject(new Error("未选择实验"));
   }
 
-  const response = await request.get(API.experiment.post(experimentId));
+  const response = await request.get<PostExamRaw[]>(
+    API.experiment.post(experimentId),
+  );
   return response || [];
 }
 

@@ -7,7 +7,11 @@ import { enterExperiment } from "@/services/experiment";
 import { useNavigate } from "react-router-dom";
 import { getExperimentList, getExperimentStages } from "@/services/experiment";
 import { useEffect } from "react";
-import type { ExperimentWithStage, Stage } from "@/types/experiment";
+import type {
+  ExperimentWithStage,
+  Stage,
+  UserExperimentStage,
+} from "@/types/experiment";
 import { toast } from "@/store";
 
 const difficultyMap: Record<number, string> = {
@@ -42,16 +46,22 @@ export default function LabPage() {
 
         // 确保 expData 是数组
         const expList = Array.isArray(expData) ? expData : [];
-        const stageList = stageData;
+        const stageList: UserExperimentStage[] = stageData;
 
         // 合并数据 → 只用于展示，不存多余状态
-        const merged = expList.map((exp: any) => {
+        const merged = expList.map((exp) => {
           const stageItem = stageList.find(
-            (s: any) => s.experiment_id === exp.experiment_id,
+            (s) => s.experiment_id === exp.experiment_id,
           );
+          const stage: Stage =
+            stageItem?.current_stage === "PRE" ||
+            stageItem?.current_stage === "DOING" ||
+            stageItem?.current_stage === "POST"
+              ? stageItem.current_stage
+              : "PRE";
           return {
             ...exp,
-            stage: stageItem?.current_stage || "PRE",
+            stage,
           } as ExperimentWithStage;
         });
 
@@ -76,12 +86,7 @@ export default function LabPage() {
       // 处理不同的响应格式
       let currentStage = exp.stage;
       if (response) {
-        let stageNum: number | undefined;
-        if (response.current_stage) {
-          stageNum = response.current_stage;
-        } else if (response.current_stage) {
-          stageNum = response.current_stage;
-        }
+        const stageNum = response.current_stage;
 
         // 将数字类型的阶段转换为Stage类型
         if (stageNum) {

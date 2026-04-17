@@ -2,6 +2,7 @@
 // D-ETCIF-frontend/src/app/auth/useAuthSession.ts
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import type { AxiosError, AxiosResponse } from "axios";
 import { request } from "@/services/requests";
 import { useAuthStore } from "@/store";
 
@@ -12,8 +13,8 @@ export function useAuthSession() {
 
   useEffect(() => {
     const id = request.interceptors.response.use(
-      (res: any) => res,
-      (err: any) => {
+      (res: AxiosResponse) => res,
+      (err: AxiosError) => {
         const isLoginApi = err?.config?.url === "/api/login";
         const status = err?.response?.status;
 

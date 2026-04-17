@@ -7,19 +7,19 @@ import { API_BASE_URL } from "@/services/api";
 
 // 自定义Axios实例类型，确保TypeScript知道我们的拦截器已经处理了响应数据
 type CustomAxiosInstance = {
-  <T = any>(config: AxiosRequestConfig): Promise<T>;
-  get<T = any>(url: string, config?: AxiosRequestConfig): Promise<T>;
-  post<T = any>(
+  <T = unknown>(config: AxiosRequestConfig): Promise<T>;
+  get<T = unknown>(url: string, config?: AxiosRequestConfig): Promise<T>;
+  post<T = unknown>(
     url: string,
-    data?: any,
+    data?: unknown,
     config?: AxiosRequestConfig,
   ): Promise<T>;
-  put<T = any>(
+  put<T = unknown>(
     url: string,
-    data?: any,
+    data?: unknown,
     config?: AxiosRequestConfig,
   ): Promise<T>;
-  delete<T = any>(url: string, config?: AxiosRequestConfig): Promise<T>;
+  delete<T = unknown>(url: string, config?: AxiosRequestConfig): Promise<T>;
 } & Omit<AxiosInstance, "get" | "post" | "put" | "delete">;
 
 const instance = axios.create({

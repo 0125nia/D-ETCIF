@@ -6,8 +6,16 @@ import React, { useState } from "react";
 export interface TreeItem<T = unknown> {
   id: string | number;
   children?: TreeItem<T>[];
-  [key: string]: any;
 }
+
+const getAllKeys = <T extends TreeItem>(items: T[]): Array<string | number> =>
+  items.reduce<Array<string | number>>((keys, item) => {
+    keys.push(item.id);
+    if (item.children?.length) {
+      keys.push(...getAllKeys(item.children as T[]));
+    }
+    return keys;
+  }, []);
 
 interface ListProps<T extends TreeItem> {
   // 树形数据（必须包含 id + 可选 children）
@@ -40,18 +48,6 @@ const List = <T extends TreeItem>({
       prev.includes(id) ? prev.filter((key) => key !== id) : [...prev, id],
     );
   };
-
-  // 递归获取所有节点 ID（用于默认全展开）
-  function getAllKeys(items: T[]): Array<string | number> {
-    let keys: Array<string | number> = [];
-    items.forEach((item) => {
-      keys.push(item.id);
-      if (item.children?.length) {
-        keys = [...keys, ...getAllKeys(item.children as T[])];
-      }
-    });
-    return keys;
-  }
 
   // 递归渲染节点
   const renderTreeItems = (items: T[]) => {
