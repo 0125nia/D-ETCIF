@@ -53,7 +53,7 @@ export default function CorrectDetail({
     //   },
     // };
     // setDetail(mockData);
-    setLoading(true);
+    // setLoading(true);
     getStudentResultDetail(studentId, experimentId)
       .then((res) => {
         setDetail(res);
