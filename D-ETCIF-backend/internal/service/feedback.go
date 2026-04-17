@@ -51,25 +51,35 @@ func (fs *FeedbackService) HandleBehaviorEvent(event *model.BehaviorEvent) {
 		fs.RealtimeFeedback(fallbackLog, event)
 		fs.StrategyFeedback(fallbackLog, event)
 	case model.BehaviorKindMidEvent:
-		// 处理实验中事件，提取代码内容作为执行日志
 		utils.Info("Handling MidEvent event")
 		cellContent := stringifyPayload(event.Payload["content"])
 		utils.Info("Extracted cell content:", cellContent)
-		if cellContent != "" {
-			// 模拟执行日志，假设代码执行失败（因为是测试）
-			log := &model.ExecutionLog{
-				StudentID:    event.StudentID,
-				ExperimentID: event.ExperimentID,
-				CellContent:  cellContent,
-				Error:        "模拟错误：代码执行失败",
-				Success:      false,
-			}
-			utils.Info("Created execution log from MidEvent")
-			fs.RealtimeFeedback(log, event)
-			fs.StrategyFeedback(log, event)
-		} else {
+		if strings.TrimSpace(cellContent) == "" {
 			utils.Info("No cell content in MidEvent")
+			return
 		}
+		errorText := stringifyPayload(event.Payload["error"])
+		successRaw, hasSuccess := event.Payload["success"]
+		if !hasSuccess && strings.TrimSpace(errorText) == "" {
+			utils.Info("MidEvent has no execution result, skip feedback dispatch")
+			return
+		}
+
+		success := false
+		if hasSuccess {
+			success = boolFromPayload(successRaw)
+		}
+
+		log := &model.ExecutionLog{
+			StudentID:    event.StudentID,
+			ExperimentID: event.ExperimentID,
+			CellContent:  cellContent,
+			Error:        errorText,
+			Success:      success,
+		}
+		utils.Info("Created execution log from MidEvent")
+		fs.RealtimeFeedback(log, event)
+		fs.StrategyFeedback(log, event)
 	case model.BehaviorKindSummarySubmit:
 		utils.Info("Handling SummarySubmit event")
 		fs.SummaryFeedback(event.StudentID, event.ExperimentID, event)

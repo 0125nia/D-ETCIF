@@ -1,5 +1,5 @@
 // Package repository
-// D-ETCIF-backend/internal/repository/experiment_json_migration.go
+// D-ETCIF-backend/internal/repository/experiment_migration.go
 package repository
 
 import (
@@ -97,12 +97,8 @@ func MigrateExperimentData(dataFilePath string) error {
 		return fmt.Errorf("读取实验数据JSON失败: %w", err)
 	}
 
-	fallbackExperimentID := int64(1)
-	fallbackExperimentName := "matplotlib数据可视化实验"
-	if len(payload.Pre) > 0 {
-		fallbackExperimentID = payload.Pre[0].ExperimentID
-		fallbackExperimentName = payload.Pre[0].ExperimentName
-	}
+	fallbackExperimentID, fallbackExperimentName := inferExperimentContext(payload)
+	skippedPostCount := 0
 
 	posts := make([]model.PostExperimentData, 0, len(payload.Post))
 	for _, item := range payload.Post {
@@ -113,10 +109,20 @@ func MigrateExperimentData(dataFilePath string) error {
 
 		experimentID := item.ExperimentID
 		if experimentID == 0 {
+			if fallbackExperimentID == 0 {
+				skippedPostCount++
+				utils.Warn(fmt.Sprintf("跳过 post 实验数据(id=%d): 缺少 experiment_id", item.ID))
+				continue
+			}
 			experimentID = fallbackExperimentID
 		}
 		experimentName := strings.TrimSpace(item.ExperimentName)
 		if experimentName == "" {
+			if strings.TrimSpace(fallbackExperimentName) == "" {
+				skippedPostCount++
+				utils.Warn(fmt.Sprintf("跳过 post 实验数据(id=%d): 缺少 experiment_name", item.ID))
+				continue
+			}
 			experimentName = fallbackExperimentName
 		}
 
@@ -194,8 +200,57 @@ func MigrateExperimentData(dataFilePath string) error {
 		return err
 	}
 
-	utils.Infof("实验资源迁移完成，pre=%d，doing=%d，post=%d", len(payload.Pre), len(payload.Doing), len(posts))
+	utils.Infof("实验资源迁移完成，pre=%d，doing=%d，post=%d，post_skipped=%d", len(payload.Pre), len(payload.Doing), len(posts), skippedPostCount)
 	return nil
+}
+
+// inferExperimentContext 按 pre -> doing -> post 的顺序推断实验ID与实验名。
+// 当无法从任何来源推断时，返回 (0, "")。
+func inferExperimentContext(payload experimentDataJSON) (int64, string) {
+	var experimentID int64
+	experimentName := ""
+
+	if len(payload.Pre) > 0 {
+		for _, item := range payload.Pre {
+			if experimentID == 0 && item.ExperimentID != 0 {
+				experimentID = item.ExperimentID
+			}
+			if experimentName == "" && strings.TrimSpace(item.ExperimentName) != "" {
+				experimentName = strings.TrimSpace(item.ExperimentName)
+			}
+			if experimentID != 0 && experimentName != "" {
+				return experimentID, experimentName
+			}
+		}
+	}
+
+	if len(payload.Doing) > 0 {
+		for _, item := range payload.Doing {
+			if experimentID == 0 && item.ExperimentID != 0 {
+				experimentID = item.ExperimentID
+			}
+			if experimentName == "" && strings.TrimSpace(item.ExperimentName) != "" {
+				experimentName = strings.TrimSpace(item.ExperimentName)
+			}
+			if experimentID != 0 && experimentName != "" {
+				return experimentID, experimentName
+			}
+		}
+	}
+
+	for _, item := range payload.Post {
+		if experimentID == 0 && item.ExperimentID != 0 {
+			experimentID = item.ExperimentID
+		}
+		if experimentName == "" && strings.TrimSpace(item.ExperimentName) != "" {
+			experimentName = strings.TrimSpace(item.ExperimentName)
+		}
+		if experimentID != 0 && experimentName != "" {
+			return experimentID, experimentName
+		}
+	}
+
+	return experimentID, experimentName
 }
 
 // userExperimentJSON 用户实验数据JSON结构
@@ -235,7 +290,7 @@ func MigrateUserExperiments(filePath string) error {
 	// 批量插入用户实验数据
 	if len(userExperiments) > 0 {
 		if err := config.DB.Clauses(clause.OnConflict{
-			Columns: []clause.Column{{Name: "user_id"}, {Name: "experiment_id"}},
+			Columns:   []clause.Column{{Name: "user_id"}, {Name: "experiment_id"}},
 			DoNothing: true,
 		}).Create(&userExperiments).Error; err != nil {
 			return fmt.Errorf("写入用户实验数据失败: %w", err)
