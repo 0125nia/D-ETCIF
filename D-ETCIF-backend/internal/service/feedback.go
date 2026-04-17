@@ -68,8 +68,6 @@ func (fs *FeedbackService) HandleBehaviorEvent(event *model.BehaviorEvent) {
 		success := false
 		if hasSuccess {
 			success = boolFromPayload(successRaw)
-		} else {
-			success = strings.TrimSpace(errorText) == ""
 		}
 
 		log := &model.ExecutionLog{

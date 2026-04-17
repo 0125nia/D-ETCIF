@@ -35,7 +35,7 @@ export default function HelpModal({
       return;
     }
     const experimentStage = stageToNumber(currentStage);
-    if (!user?.id || !currentExperimentId || !experimentStage) {
+    if (!user?.id || !currentExperimentId || experimentStage === null) {
       toast.error("实验上下文不完整，无法提交求助");
       return;
     }
