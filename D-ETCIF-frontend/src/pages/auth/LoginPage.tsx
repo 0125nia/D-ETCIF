@@ -40,22 +40,8 @@ export default function LoginPage() {
 
       toast.success("登录成功");
       nav(role === "student" ? "/student/lab" : "/teacher/dashboard");
-    } catch (err: any) {
-      console.log("后端登录失败，启用 mock");
-      // mock 登录
-      loginSuccess({
-        token: "mock-student-token",
-        role: "student",
-        user: {
-          id: 999,
-          user_number: "2211111144",
-          name: "test",
-          role: "student",
-        },
-      });
-
-      toast.success("登录成功（Mock）");
-      nav("/student/lab");
+    } catch {
+      toast.error("登录失败，请检查账号、密码和角色");
     } finally {
       setLoading(false);
     }
