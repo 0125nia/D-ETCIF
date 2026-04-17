@@ -16,14 +16,23 @@ export default function CodeEditor() {
     studentId: String(studentId),
     experimentId,
   });
+  const notebookBaseUrl = import.meta.env.VITE_NOTEBOOK_BASE_URL as
+    | string
+    | undefined;
+  const notebookPath = import.meta.env.VITE_NOTEBOOK_PATH as string | undefined;
+  const iframeSrc = notebookBaseUrl
+    ? `${notebookBaseUrl.replace(/\/$/, "")}/${(notebookPath || "lab/tree/ipynb/test.ipynb").replace(/^\//, "")}?${params.toString()}`
+    : "";
 
   return (
     <div className="h-screen w-full">
-      <iframe
-        src={`http://localhost:8888/lab/tree/ipynb/test.ipynb?${params.toString()}`}
-        className="w-full h-full border-none"
-        title="notebook"
-      />
+      {iframeSrc ? (
+        <iframe src={iframeSrc} className="w-full h-full border-none" title="notebook" />
+      ) : (
+        <div className="flex h-full items-center justify-center text-sm text-gray-500">
+          未配置 Notebook 地址，请设置 VITE_NOTEBOOK_BASE_URL
+        </div>
+      )}
     </div>
   );
 }

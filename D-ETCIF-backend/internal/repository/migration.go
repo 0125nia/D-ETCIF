@@ -20,6 +20,10 @@ func Migrate() {
 		utils.Info("数据库未连接，跳过迁移")
 		return
 	}
+	if cfg.Config != nil && cfg.Config.Migrate != nil && !cfg.Config.Migrate.Auto {
+		utils.Info("migrate.auto=false，跳过自动迁移")
+		return
+	}
 
 	// 暂时注释掉检查，强制重新迁移
 	// if config.DB.Migrator().HasTable(&MigrationLog{}) {
@@ -91,18 +95,6 @@ func MigrateWithData() error {
 	// 迁移用户实验数据
 	if err := MigrateUserExperiments(cfg.Config.Migrate.ExperimentStagesPath); err != nil {
 		utils.Errorf("迁移用户实验数据失败: %v", err)
-		errors = append(errors, err)
-	}
-
-	// 迁移教师端结果与仪表盘初始化数据
-	if err := MigrateTeacherEndpointData(); err != nil {
-		utils.Errorf("迁移教师端初始化数据失败: %v", err)
-		errors = append(errors, err)
-	}
-
-	// 迁移学生profile数据
-	if err := MigrateProfileData(); err != nil {
-		utils.Errorf("迁移学生profile数据失败: %v", err)
 		errors = append(errors, err)
 	}
 

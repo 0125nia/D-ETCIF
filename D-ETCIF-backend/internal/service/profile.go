@@ -3,9 +3,11 @@
 package service
 
 import (
+	cfg "D-ETCIF-backend/configs"
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"math"
 	"net/http"
@@ -79,17 +81,7 @@ func asFloat64(v interface{}, fallback float64) float64 {
 // GetCognitiveMap 从 Neo4j 获取真实图谱
 func (s *ProfileService) GetCognitiveMap(ctx context.Context, studentID string) (*model.CognitiveMapData, error) {
 	if s.neo4jDriver == nil {
-		// 如果 Neo4j 驱动不可用，返回默认数据
-		nodes := []model.CognitiveMapNode{
-			{ID: studentID, Name: "我", Expid: 0, Type: "Student"},
-			{ID: "1", Name: "数据可视化基础", Expid: 1, Type: "KnowledgePoint"},
-			{ID: "2", Name: "图表类型", Expid: 1, Type: "KnowledgePoint"},
-		}
-		links := []model.CognitiveMapLink{
-			{Source: studentID, Target: "1", Value: 0.8},
-			{Source: studentID, Target: "2", Value: 0.6},
-		}
-		return &model.CognitiveMapData{Nodes: nodes, Links: links}, nil
+		return nil, errors.New("neo4j driver is not initialized")
 	}
 
 	session := s.neo4jDriver.NewSession(ctx, neo4j.SessionConfig{AccessMode: neo4j.AccessModeRead})
@@ -115,17 +107,7 @@ func (s *ProfileService) GetCognitiveMap(ctx context.Context, studentID string) 
 		"relTypes":  masteryRelTypes,
 	})
 	if err != nil {
-		// 查询失败时返回默认数据
-		nodes := []model.CognitiveMapNode{
-			{ID: studentID, Name: "我", Expid: 0, Type: "Student"},
-			{ID: "1", Name: "数据可视化基础", Expid: 1, Type: "KnowledgePoint"},
-			{ID: "2", Name: "图表类型", Expid: 1, Type: "KnowledgePoint"},
-		}
-		links := []model.CognitiveMapLink{
-			{Source: studentID, Target: "1", Value: 0.8},
-			{Source: studentID, Target: "2", Value: 0.6},
-		}
-		return &model.CognitiveMapData{Nodes: nodes, Links: links}, nil
+		return nil, err
 	}
 
 	nodes := []model.CognitiveMapNode{
@@ -165,19 +147,8 @@ func (s *ProfileService) GetCognitiveMap(ctx context.Context, studentID string) 
 		})
 	}
 
-	// 如果没有数据，返回默认数据
-	if len(links) == 0 {
-		nodes = append(nodes, model.CognitiveMapNode{
-			ID:    "1",
-			Name:  "数据可视化基础",
-			Expid: 1,
-			Type:  "KnowledgePoint",
-		})
-		links = append(links, model.CognitiveMapLink{
-			Source: studentID,
-			Target: "1",
-			Value:  0.5,
-		})
+	if err := result.Err(); err != nil {
+		return nil, err
 	}
 
 	return &model.CognitiveMapData{Nodes: nodes, Links: links}, nil
@@ -188,12 +159,7 @@ func (s *ProfileService) GetStudyReport(studentID string) (*model.StudyReportDat
 	var report model.StudyReportData
 
 	if s.db == nil {
-		// 如果数据库连接不可用，返回默认数据
-		report.TotalTime = 120
-		report.TotalExp = 5
-		report.ErrorRate = 15
-		report.AverageScore = 85
-		return &report, nil
+		return nil, errors.New("database is not initialized")
 	}
 
 	// 1. 统计时长 (pre + mid，毫秒转分钟)
@@ -205,10 +171,9 @@ func (s *ProfileService) GetStudyReport(studentID string) (*model.StudyReportDat
 		studentID, studentID,
 	).Row().Scan(&totalMs)
 	if err != nil {
-		report.TotalTime = 120
-	} else {
-		report.TotalTime = int(totalMs / 60000)
+		return nil, err
 	}
+	report.TotalTime = int(totalMs / 60000)
 
 	// 2. 统计学习实验数（experiments 表优先）
 	userIDInt, parseUserErr := strconv.ParseInt(strings.TrimSpace(studentID), 10, 64)
@@ -228,10 +193,9 @@ func (s *ProfileService) GetStudyReport(studentID string) (*model.StudyReportDat
 				SELECT experiment_id FROM post_events WHERE student_id = ?
 			) t`, studentID, studentID).Row().Scan(&count)
 		if err != nil {
-			report.TotalExp = 0
-		} else {
-			report.TotalExp = int(count)
+			return nil, err
 		}
+		report.TotalExp = int(count)
 	}
 
 	// 3. 计算报错率
@@ -242,10 +206,10 @@ func (s *ProfileService) GetStudyReport(studentID string) (*model.StudyReportDat
 		if err == nil && totalActions > 0 {
 			report.ErrorRate = round1(float64(errorActions) * 100 / float64(totalActions))
 		} else {
-			report.ErrorRate = 15
+			report.ErrorRate = 0
 		}
 	} else {
-		report.ErrorRate = 15
+		return nil, err
 	}
 
 	// 4. 平均分（operation_results 优先，fallback 到 post_events）
@@ -265,10 +229,9 @@ func (s *ProfileService) GetStudyReport(studentID string) (*model.StudyReportDat
 			Scan(&avgScore)
 	}
 	if err != nil {
-		report.AverageScore = 85
-	} else {
-		report.AverageScore = round1(clampRange(avgScore, 0, 100))
+		return nil, err
 	}
+	report.AverageScore = round1(clampRange(avgScore, 0, 100))
 
 	return &report, nil
 }
@@ -278,18 +241,13 @@ func (s *ProfileService) GetRecommendations(studentID string) ([]model.ResourceR
 	// 1. 获取学生的薄弱知识点
 	weakKps, err := s.getWeakKnowledgePoints(studentID)
 	if err != nil {
-		// 如果获取薄弱知识点失败，使用默认知识点
-		weakKps = []string{"数据可视化的定义与作用", "12种常见可视化图表类型"}
+		return nil, err
 	}
 
 	// 2. 调用Python服务的API获取推荐
 	recs, err := s.callPythonRecommendationService(weakKps)
 	if err != nil {
-		return []model.ResourceRecommendation{
-			{ID: 1, Name: "数据可视化", Link: "/knowledge/数据可视化"},
-			{ID: 2, Name: "常见数据可视化方式", Link: "/knowledge/常见数据可视化方式"},
-			{ID: 3, Name: "data-relationships", Link: "/knowledge/data-relationships"},
-		}, nil
+		return nil, err
 	}
 
 	if len(recs) > 3 {
@@ -303,8 +261,7 @@ func (s *ProfileService) getWeakKnowledgePoints(studentID string) ([]string, err
 	var weakKps []string
 
 	if s.neo4jDriver == nil {
-		// 如果 Neo4j 驱动不可用，返回默认知识点
-		return []string{"数据可视化的定义与作用", "12种常见可视化图表类型"}, nil
+		return nil, errors.New("neo4j driver is not initialized")
 	}
 
 	// 从Neo4j获取学生的知识点掌握度，筛选掌握度低的知识点
@@ -332,8 +289,7 @@ func (s *ProfileService) getWeakKnowledgePoints(studentID string) ([]string, err
 		"relTypes":  masteryRelTypes,
 	})
 	if err != nil {
-		// 如果查询失败，返回默认知识点
-		return []string{"数据可视化的定义与作用", "12种常见可视化图表类型"}, nil
+		return nil, err
 	}
 
 	for result.Next(ctx) {
@@ -342,9 +298,8 @@ func (s *ProfileService) getWeakKnowledgePoints(studentID string) ([]string, err
 		weakKps = append(weakKps, kpName)
 	}
 
-	// 如果没有薄弱知识点，返回默认知识点
-	if len(weakKps) == 0 {
-		weakKps = []string{"数据可视化的定义与作用", "12种常见可视化图表类型"}
+	if err := result.Err(); err != nil {
+		return nil, err
 	}
 
 	return weakKps, nil
@@ -368,8 +323,15 @@ func (s *ProfileService) callPythonRecommendationService(weakKps []string) ([]mo
 	}
 
 	// 发送POST请求到Python服务
+	if cfg.Config == nil || cfg.Config.Python == nil {
+		return nil, errors.New("python service config is not initialized")
+	}
+	baseURL := strings.TrimRight(cfg.Config.Python.BaseURL, "/")
+	if baseURL == "" {
+		return nil, errors.New("python recommendation base url is empty")
+	}
 	resp, err := client.Post(
-		"http://localhost:8006/api/v1/recommend",
+		baseURL+"/api/v1/recommend",
 		"application/json",
 		bytes.NewBuffer(reqBody),
 	)
@@ -426,15 +388,6 @@ func (s *ProfileService) callPythonRecommendationService(weakKps []string) ([]mo
 			Name: item.name,
 			Link: "/resources/" + url.PathEscape(item.name),
 		})
-	}
-
-	// 如果没有推荐结果，返回默认推荐
-	if len(recs) == 0 {
-		recs = []model.ResourceRecommendation{
-			{ID: 1, Name: "数据可视化", Link: "/knowledge/数据可视化"},
-			{ID: 2, Name: "常见数据可视化方式", Link: "/knowledge/常见数据可视化方式"},
-			{ID: 3, Name: "data-relationships", Link: "/knowledge/data-relationships"},
-		}
 	}
 
 	return recs, nil
