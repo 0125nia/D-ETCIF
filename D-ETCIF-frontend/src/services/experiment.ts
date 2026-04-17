@@ -89,8 +89,8 @@ export async function checkDoingStageDone(
     );
     return res;
   } catch (error) {
-    // 兜底处理，当接口返回404或其他错误时，直接返回ok
-    return { can_move: true, message: "ok" };
+    console.error("checkDoingStageDone failed", error);
+    return { can_move: false, message: "检查失败，请稍后重试" };
   }
 }
 

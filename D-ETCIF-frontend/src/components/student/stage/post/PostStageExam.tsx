@@ -24,12 +24,14 @@ export default function PostStageExam() {
   const hasSubmittedRef = useRef(false);
 
   const getExperimentId = () =>
-    currentExperimentId ? currentExperimentId.toString() : "unknown";
+    currentExperimentId ? currentExperimentId.toString() : null;
 
   const reportQuestionDwell = (questionId: number, durationMs: number) => {
     if (durationMs < 300) return;
+    const experimentId = getExperimentId();
+    if (!experimentId) return;
     trackPostEvent({
-      experiment_id: getExperimentId(),
+      experiment_id: experimentId,
       action_type: "post_quiz_question_dwell",
       score: 0,
       content: `question_id=${questionId};duration_ms=${durationMs}`,
@@ -47,8 +49,10 @@ export default function PostStageExam() {
   const reportSessionDwell = () => {
     const durationMs = Date.now() - sessionStartRef.current;
     if (durationMs < 300) return;
+    const experimentId = getExperimentId();
+    if (!experimentId) return;
     trackPostEvent({
-      experiment_id: getExperimentId(),
+      experiment_id: experimentId,
       action_type: "post_quiz_session_dwell",
       score: 0,
       content: `duration_ms=${durationMs}`,
@@ -81,8 +85,10 @@ export default function PostStageExam() {
         });
         setQuestions(parsedData);
 
+        const experimentId = getExperimentId();
+        if (!experimentId) return;
         trackPostEvent({
-          experiment_id: getExperimentId(),
+          experiment_id: experimentId,
           action_type: "post_quiz_enter",
           score: 0,
           content: `question_count=${parsedData.length}`,
@@ -139,8 +145,10 @@ export default function PostStageExam() {
     setScore(totalScore);
     toast.success(`提交成功！成绩：${totalScore}分`);
 
+    const experimentId = getExperimentId();
+    if (!experimentId) return;
     trackPostEvent({
-      experiment_id: getExperimentId(),
+      experiment_id: experimentId,
       action_type: "post_quiz_submit",
       score: totalScore,
       content: `小测提交：${correctCount}/${questions.length}`,

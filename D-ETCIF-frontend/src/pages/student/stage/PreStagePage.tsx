@@ -22,16 +22,19 @@ export default function PreStagePage() {
 
   const reportResourceDuration = (item: ResourceItem | null) => {
     if (!item) return;
+    if (!currentExperimentId) return;
+    const path = item.url?.trim();
+    if (!path) return;
 
     timer.stop(timerName);
     const duration = timer.getTime(timerName);
     timer.reset(timerName);
 
     trackPreEvent({
-      experiment_id: currentExperimentId ? currentExperimentId.toString() : "unknown",
+      experiment_id: currentExperimentId.toString(),
       resource_id: item.id.toString(),
       resource_name: item.name,
-      path: item.url || "unknown",
+      path,
       duration,
     }).catch(console.error);
   };
