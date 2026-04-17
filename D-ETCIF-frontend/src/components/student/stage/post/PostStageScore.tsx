@@ -11,6 +11,7 @@ export default function PostStageScore({ score }: { score: number | null }) {
 
   // 1. 实验操作分（原本硬编码的 45），现在改为从后端动态获取
   const [expOperationScore, setExpOperationScore] = useState<number>(0);
+  const [backendPostScore, setBackendPostScore] = useState<number>(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -24,7 +25,8 @@ export default function PostStageScore({ score }: { score: number | null }) {
         const res = await getOperationResult(experimentId);
         console.log("获取操作评分结果:", res);
         if (res) {
-          setExpOperationScore(res.operation_score || 40);
+          setExpOperationScore(res.behavior_score || 40);
+          setBackendPostScore(res.post_score || 0);
         }
       } catch (err) {
         console.error("获取操作评分失败", err);
@@ -36,7 +38,7 @@ export default function PostStageScore({ score }: { score: number | null }) {
   }, [experimentId]);
 
   // 2. 动态计算小测成绩（占 40%）
-  const realExamScore = score !== null ? score * 0.4 : 0;
+  const realExamScore = score !== null ? score * 0.4 : backendPostScore;
 
   // 3. 计算总成绩（操作分占 60%，小测分占 40%，或者按后端返回的权重计算）
   // 这里暂时沿用你的逻辑：操作分(满分60) + 小测折合分(满分40)
