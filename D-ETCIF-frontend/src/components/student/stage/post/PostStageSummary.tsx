@@ -75,7 +75,7 @@ export default function PostStageSummary() {
       } else {
         toast.success("草稿已保存");
       }
-    } catch (err) {
+    } catch {
       toast.error("操作失败，请重试");
     } finally {
       setSaveLoading(false);

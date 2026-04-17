@@ -191,5 +191,4 @@ ${code_snippet}
       }
     };
   }, [appendFeedback, setSelectedFeedback, user?.id, user?.name]); // 当用户信息变化时重新挂载（如登入/登出）
-  return ws.current;
 };

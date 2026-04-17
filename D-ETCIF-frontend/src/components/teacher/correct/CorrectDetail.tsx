@@ -80,7 +80,7 @@ export default function CorrectDetail({
       // 模拟调用：await submitAssessment({ studentId, experimentId, score, comment });
       alert("提交批阅成功！");
       onClose(); // 提交后关闭详情
-    } catch (e) {
+    } catch {
       alert("提交失败");
     } finally {
       setSubmitting(false);
