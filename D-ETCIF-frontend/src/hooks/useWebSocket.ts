@@ -36,6 +36,21 @@ interface WsMessage {
   data?: unknown;
 }
 
+const showToastBySeverity = (
+  severity: "success" | "error" | "warning",
+  message: string,
+) => {
+  if (severity === "success") {
+    toast.success(message);
+    return;
+  }
+  if (severity === "error") {
+    toast.error(message);
+    return;
+  }
+  toast.warning(message);
+};
+
 export const useWebSocket = () => {
   const ws = useRef<WebSocket | null>(null);
   const user = useAuthStore((s) => s.user);
@@ -75,7 +90,7 @@ export const useWebSocket = () => {
               | "success"
               | "error"
               | "warning";
-            toast[severity](`${alert.Name}: ${alert.Message}`);
+            showToastBySeverity(severity, `${alert.Name}: ${alert.Message}`);
 
             const feedback: Feedback = {
               id: `rt_${Date.now()}_${Math.random().toString(16).slice(2)}`,
