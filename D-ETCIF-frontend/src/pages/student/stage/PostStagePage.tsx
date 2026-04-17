@@ -1,6 +1,6 @@
 // Package stage
 // D-ETCIF-frontend/src/pages/student/stage/PostStagePage.tsx
-import { useState } from "react";
+import { useState, type ComponentType } from "react";
 import { ThreeColumnLayout } from "@/layouts";
 import { PageContainer } from "@/components/common";
 
@@ -14,7 +14,7 @@ import type { PostTaskItem } from "@/types";
 
 type ContentType = "default" | PostTaskItem["type"];
 
-const CONTENT_MAP: Record<ContentType, React.ComponentType<any>> = {
+const CONTENT_MAP: Record<ContentType, ComponentType> = {
   default: PostStageExam,
   summary: PostStageSummary,
   exam: PostStageExam,
