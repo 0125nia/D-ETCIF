@@ -21,8 +21,9 @@ export interface ExperimentSummary {
 }
 
 export interface OperationResult {
-  behavior_score: number;
-  post_score: number;
+  operation_score?: number;
+  behavior_score?: number;
+  post_score?: number;
 }
 
 // 教师端 - 全班概览项
