@@ -61,3 +61,24 @@ func (s *ExperimentResService) GetResultsByExperiment(expID int64) ([]model.Expe
 	err := s.db.Where("experiment_id = ?", expID).Find(&reports).Error
 	return reports, err
 }
+
+// GetOperationScoresByExperiment 批量获取实验操作分数
+func (s *ExperimentResService) GetOperationScoresByExperiment(expID int64, userIDs []int64) ([]model.OperationResult, error) {
+	var results []model.OperationResult
+	err := s.db.Where("experiment_id = ? AND user_id IN ?", expID, userIDs).Find(&results).Error
+	return results, err
+}
+
+// GetSummariesByExperiment 批量获取实验总结
+func (s *ExperimentResService) GetSummariesByExperiment(expID int64, userIDs []int64) ([]model.ExperimentSummary, error) {
+	var summaries []model.ExperimentSummary
+	err := s.db.Where("experiment_id = ? AND user_id IN ?", expID, userIDs).Find(&summaries).Error
+	return summaries, err
+}
+
+// GetReportsByExperiment 批量获取实验报告
+func (s *ExperimentResService) GetReportsByExperiment(expID int64, userIDs []int64) ([]model.ExperimentReport, error) {
+	var reports []model.ExperimentReport
+	err := s.db.Where("experiment_id = ? AND user_id IN ?", expID, userIDs).Find(&reports).Error
+	return reports, err
+}

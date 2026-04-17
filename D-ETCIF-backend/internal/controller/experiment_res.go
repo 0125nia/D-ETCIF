@@ -143,8 +143,40 @@ func (e *ExperimentResultController) GetAllStudentResults(ctx *gin.Context) {
 		}
 	}
 
-	// 2. 调度多次查询，组装概览数据
+	// 2. 批量查询所有学生的相关数据，避免 N+1 查询
 	var overviews []model.StudentExperimentOverview
+
+	// 批量查询操作分数
+	var operationResults []model.OperationResult
+	opMap := make(map[int64]float64)
+	if len(studentIDs) > 0 {
+		operationResults, _ = e.ers.GetOperationScoresByExperiment(expID, studentIDs)
+		for _, op := range operationResults {
+			opMap[op.UserID] = op.OperationScore
+		}
+	}
+
+	// 批量查询总结
+	var summaries []model.ExperimentSummary
+	summaryMap := make(map[int64]string)
+	if len(studentIDs) > 0 {
+		summaries, _ = e.ers.GetSummariesByExperiment(expID, studentIDs)
+		for _, sum := range summaries {
+			summaryMap[sum.UserID] = sum.Status
+		}
+	}
+
+	// 批量查询报告
+	var reports []model.ExperimentReport
+	reportMap := make(map[int64]bool)
+	if len(studentIDs) > 0 {
+		reports, _ = e.ers.GetReportsByExperiment(expID, studentIDs)
+		for _, rep := range reports {
+			reportMap[rep.UserID] = true
+		}
+	}
+
+	// 3. 组装概览数据
 	for _, se := range studentExps {
 		overview := model.StudentExperimentOverview{
 			UserID:       se.UserID,
@@ -153,17 +185,18 @@ func (e *ExperimentResultController) GetAllStudentResults(ctx *gin.Context) {
 			CurrentStage: se.Stage, // 来自 experiments 表
 		}
 
-		if opRes, err := e.ers.GetOperationScore(se.UserID, expID); err == nil {
-			overview.OperationScore = opRes.OperationScore
+		// 从 map 中获取数据
+		if score, ok := opMap[se.UserID]; ok {
+			overview.OperationScore = score
 		}
 
-		if summary, err := e.ers.GetSummary(se.UserID, expID); err == nil {
-			overview.SummaryStatus = summary.Status
+		if status, ok := summaryMap[se.UserID]; ok {
+			overview.SummaryStatus = status
 		} else {
 			overview.SummaryStatus = "empty"
 		}
 
-		if _, err := e.ers.GetReport(se.UserID, expID); err == nil {
+		if _, ok := reportMap[se.UserID]; ok {
 			overview.HasReport = true
 		} else {
 			overview.HasReport = false
