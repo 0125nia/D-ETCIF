@@ -10,6 +10,7 @@ import type {
   ExperimentSummary,
   OperationResult,
   DoingTask,
+  PostExamRaw,
 } from "@/types";
 /**
  * 获取实验前资源列表
@@ -23,7 +24,9 @@ export async function getPreExperimentResources(): Promise<
     return Promise.reject(new Error("未选择实验"));
   }
 
-  const response = await request.get<PreExperimentData[]>(API.experiment.pre(experimentId));
+  const response = await request.get<PreExperimentData[]>(
+    API.experiment.pre(experimentId),
+  );
   return response || [];
 }
 
@@ -37,21 +40,25 @@ export async function getDoingExperimentContent(): Promise<DoingTask[]> {
     return Promise.reject(new Error("未选择实验"));
   }
 
-  const response = await request.get<DoingTask[]>(API.experiment.doing(experimentId));
+  const response = await request.get<DoingTask[]>(
+    API.experiment.doing(experimentId),
+  );
   return response || [];
 }
 
 /**
  * 获取实验后题目列表
  */
-export async function getPostExperimentQuestions() {
+export async function getPostExperimentQuestions(): Promise<PostExamRaw[]> {
   const experimentId = useExperimentStore.getState().currentExperimentId;
 
   if (!experimentId) {
     return Promise.reject(new Error("未选择实验"));
   }
 
-  const response = await request.get(API.experiment.post(experimentId));
+  const response = await request.get<PostExamRaw[]>(
+    API.experiment.post(experimentId),
+  );
   return response || [];
 }
 
@@ -67,7 +74,9 @@ export async function getExperimentStages(): Promise<UserExperimentStage[]> {
 export async function enterExperiment(
   experimentId: number,
 ): Promise<{ current_stage: number }> {
-  return request.get<{ current_stage: number }>(API.experiment.enter(experimentId));
+  return request.get<{ current_stage: number }>(
+    API.experiment.enter(experimentId),
+  );
 }
 
 /**
@@ -89,8 +98,8 @@ export async function checkDoingStageDone(
     );
     return res;
   } catch (error) {
-    // 兜底处理，当接口返回404或其他错误时，直接返回ok
-    return { can_move: true, message: "ok" };
+    console.error("checkDoingStageDone failed", error);
+    return { can_move: false, message: "检查失败，请稍后重试" };
   }
 }
 
