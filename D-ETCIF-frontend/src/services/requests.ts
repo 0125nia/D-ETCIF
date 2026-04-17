@@ -53,7 +53,7 @@ instance.interceptors.response.use(
     return res.data;
   },
   (err) => {
-    const isLoginApi = err.config.url === "/api/login";
+    const isLoginApi = err.config.url === "/api/auth/login";
 
     // 只有【不是登录接口】的 401 才自动跳登录
     if (err.response?.status === 401 && !isLoginApi) {

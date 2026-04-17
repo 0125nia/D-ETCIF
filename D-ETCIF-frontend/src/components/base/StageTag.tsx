@@ -7,7 +7,7 @@ import { Button } from "@/components/common";
 import { useState } from "react";
 
 const StageTag = () => {
-  const { user } = useAuthStore();
+  const { role } = useAuthStore();
   const {
     currentStage,
     currentExperimentId,
@@ -26,7 +26,7 @@ const StageTag = () => {
     location.pathname.includes("/student/lab/post/");
 
   if (
-    user?.role === "teacher" ||
+    role === "teacher" ||
     !currentStage ||
     !currentExperimentId ||
     !isExperimentStagePage

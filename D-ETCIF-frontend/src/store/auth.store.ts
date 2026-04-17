@@ -15,6 +15,8 @@ export interface AuthUser {
 interface AuthState {
   user: AuthUser | null;
   token: string | null;
+  role: UserRole | null;
+  hydrated: boolean;
   activeNav: ActiveNav;
 
   initFromStorage: () => void;
@@ -31,6 +33,8 @@ interface AuthState {
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   token: null,
+  role: null,
+  hydrated: false,
   activeNav: "experiment",
 
   initFromStorage: () => {
@@ -38,12 +42,18 @@ export const useAuthStore = create<AuthState>((set) => ({
     const role = localStorage.getItem(STORAGE_KEYS.role) as UserRole | null;
     const userStr = localStorage.getItem(STORAGE_KEYS.user);
 
-    if (!token || !role) return;
+    if (!token || !role) {
+      set({ hydrated: true });
+      return;
+    }
 
-    let user = null;
+    let user: AuthUser | null = null;
     if (userStr) {
       try {
-        user = JSON.parse(userStr);
+        user = JSON.parse(userStr) as AuthUser;
+        if (user.role !== role) {
+          user = { ...user, role };
+        }
       } catch (e) {
         console.error("解析用户信息失败", e);
       }
@@ -51,7 +61,9 @@ export const useAuthStore = create<AuthState>((set) => ({
 
     set({
       token,
+      role,
       user,
+      hydrated: true,
     });
   },
 
@@ -65,6 +77,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 
     set({
       token,
+      role,
       user: user ?? null,
     });
   },
@@ -73,7 +86,13 @@ export const useAuthStore = create<AuthState>((set) => ({
     localStorage.removeItem(STORAGE_KEYS.token);
     localStorage.removeItem(STORAGE_KEYS.role);
     localStorage.removeItem(STORAGE_KEYS.user);
-    set({ user: null, token: null, activeNav: "experiment" });
+    set({
+      user: null,
+      token: null,
+      role: null,
+      hydrated: true,
+      activeNav: "experiment",
+    });
   },
 
   setUser: (user) => set({ user }),

@@ -8,10 +8,8 @@ import { useNavigate } from "react-router-dom";
 import StageTag from "./StageTag";
 
 const TopNav = () => {
-  const { activeNav, setNav, user } = useAuthStore();
+  const { activeNav, setNav, user, role } = useAuthStore();
   const { open: openHelpModal } = useHelpModal();
-  const role = user?.role;
-  // const role = "teacher";
   const navigate = useNavigate();
 
   const studentNav: { key: StudentNav; label: string }[] = [

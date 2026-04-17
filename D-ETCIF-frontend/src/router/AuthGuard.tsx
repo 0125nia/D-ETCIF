@@ -10,10 +10,13 @@ export function AuthGuard({
 }: {
   allowRole?: "student" | "teacher";
 }) {
+  const hydrated = useAuthStore((s) => s.hydrated);
   const token = useAuthStore((s) => s.token);
-  const role = useAuthStore((s) => s.user?.role);
+  const role = useAuthStore((s) => s.role);
 
   useEffect(() => {
+    if (!hydrated) return;
+
     if (!token) {
       toast.error("请先登录");
     } else if (!role) {
@@ -25,7 +28,11 @@ export function AuthGuard({
         toast.error("权限不足，教师请前往预览查看学生页面");
       }
     }
-  }, [token, role, allowRole]);
+  }, [hydrated, token, role, allowRole]);
+
+  if (!hydrated) {
+    return null;
+  }
 
   if (!token) {
     return <Navigate to="/login" replace />;

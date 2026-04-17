@@ -15,7 +15,7 @@ export function useAuthSession() {
     const id = request.interceptors.response.use(
       (res: AxiosResponse) => res,
       (err: AxiosError) => {
-        const isLoginApi = err?.config?.url === "/api/login";
+        const isLoginApi = err?.config?.url === "/api/auth/login";
         const status = err?.response?.status;
 
         if (status === 401 && !isLoginApi) {
