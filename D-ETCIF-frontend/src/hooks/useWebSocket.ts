@@ -7,6 +7,50 @@ import { useFeedbackStore } from "@/store/feedback.store";
 import type { Feedback } from "@/types/feedback";
 import { API_BASE_URL } from "@/services/api";
 
+interface RealtimeAlert {
+  Severity: string;
+  Name: string;
+  Message: string;
+}
+
+interface StrategyFeedbackPayload {
+  title?: string;
+  content?: string;
+  code_snippet?: string;
+  knowledge_link?: string;
+}
+
+interface SummaryWeakPoint {
+  knowledge_point?: string;
+  mastery?: number;
+  resources?: string[];
+}
+
+interface SummaryFeedbackPayload {
+  message?: string;
+  weak_points?: SummaryWeakPoint[];
+}
+
+interface WsMessage {
+  type?: string;
+  data?: unknown;
+}
+
+const showToastBySeverity = (
+  severity: "success" | "error" | "warning",
+  message: string,
+) => {
+  if (severity === "success") {
+    toast.success(message);
+    return;
+  }
+  if (severity === "error") {
+    toast.error(message);
+    return;
+  }
+  toast.warning(message);
+};
+
 export const useWebSocket = () => {
   const ws = useRef<WebSocket | null>(null);
   const user = useAuthStore((s) => s.user);
@@ -27,23 +71,26 @@ export const useWebSocket = () => {
 
     socket.onopen = () => {
       console.log(
-        `[D-ETCIF] 实时评价通道已开启: Student ${userName ?? "unknown"}`,
+        `[D-ETCIF] 实时评价通道已开启: Student ${userName ?? `#${userId}`}`,
       );
     };
 
     socket.onmessage = (event) => {
       try {
-        const res = JSON.parse(event.data);
+        const res: WsMessage = JSON.parse(event.data);
 
         // 处理一级反馈 匹配后端推送到 REALTIME_FEEDBACK
         if (res.type === "REALTIME_FEEDBACK") {
-          res.data.forEach((alert: any) => {
+          const alerts = Array.isArray(res.data)
+            ? (res.data as RealtimeAlert[])
+            : [];
+          alerts.forEach((alert) => {
             // A. 调用你现有的 toast 逻辑展示 UI
             const severity = alert.Severity.toLowerCase() as
               | "success"
               | "error"
               | "warning";
-            toast[severity](`${alert.Name}: ${alert.Message}`);
+            showToastBySeverity(severity, `${alert.Name}: ${alert.Message}`);
 
             const feedback: Feedback = {
               id: `rt_${Date.now()}_${Math.random().toString(16).slice(2)}`,
@@ -63,7 +110,8 @@ export const useWebSocket = () => {
 
         // 处理二级反馈 (注入到侧边栏 Feedback)
         if (res.type === "STRATEGY_FEEDBACK") {
-          const { title, content, code_snippet, knowledge_link } = res.data;
+          const { title, content, code_snippet, knowledge_link } =
+            (res.data as StrategyFeedbackPayload) ?? {};
 
           // 1. 弹出轻量提醒
           toast.warning("收到一条新的思路引导，请查看右侧面板");
@@ -95,10 +143,11 @@ ${code_snippet}
 
         // 处理三级反馈（长期补救）
         if (res.type === "SUMMARY_FEEDBACK") {
-          const weakPoints = Array.isArray(res.data?.weak_points)
-            ? res.data.weak_points
+          const summaryData = (res.data as SummaryFeedbackPayload) ?? {};
+          const weakPoints = Array.isArray(summaryData.weak_points)
+            ? summaryData.weak_points
             : [];
-          const summaryLines = weakPoints.map((item: any, index: number) => {
+          const summaryLines = weakPoints.map((item, index: number) => {
             const resources = Array.isArray(item.resources)
               ? item.resources.filter(Boolean)
               : [];
@@ -112,7 +161,7 @@ ${code_snippet}
             id: `sm_${Date.now()}_${Math.random().toString(16).slice(2)}`,
             type: "长期补救",
             title: "实验总结：薄弱点与资源推荐",
-            content: `${res.data?.message || "实验已结束，系统生成了总结反馈。"}${summaryLines.length > 0 ? `\n\n${summaryLines.join("\n")}` : "\n\n暂无识别到明确薄弱点。"}`,
+            content: `${summaryData.message || "实验已结束，系统生成了总结反馈。"}${summaryLines.length > 0 ? `\n\n${summaryLines.join("\n")}` : "\n\n暂无识别到明确薄弱点。"}`,
             severity: "success",
             createdAt: Date.now(),
           };
@@ -141,7 +190,6 @@ ${code_snippet}
         ws.current = null;
       }
     };
-  }, [appendFeedback, setSelectedFeedback, user?.id]); // 当用户 ID 变化时重新挂载（如登入/登出）
-
+  }, [appendFeedback, setSelectedFeedback, user?.id, user?.name]); // 当用户信息变化时重新挂载（如登入/登出）
   return ws.current;
 };
