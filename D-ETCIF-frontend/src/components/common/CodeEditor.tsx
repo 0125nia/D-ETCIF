@@ -4,7 +4,6 @@ import { useAuthStore, useExperimentStore } from "@/store";
 
 export default function CodeEditor() {
   const user = useAuthStore((state) => state.user);
-  const token = useAuthStore((state) => state.token);
   const currentExperimentId = useExperimentStore(
     (state) => state.currentExperimentId,
   );
@@ -12,13 +11,11 @@ export default function CodeEditor() {
   const studentId = user?.id ?? 0;
   const experimentId =
     currentExperimentId === null ? "" : String(currentExperimentId);
+
   const params = new URLSearchParams({
     studentId: String(studentId),
     experimentId,
   });
-  if (token) {
-    params.set("token", token);
-  }
 
   return (
     <div className="h-screen w-full">

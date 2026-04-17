@@ -19,7 +19,6 @@ func NewRouter() *gin.Engine {
 		c.JSON(http.StatusOK, gin.H{"message": "ok"})
 	})
 	ginRouter.Static("/uploads", "./static/uploads")
-
 	ginRouter.POST("/api/v1/monitor/collect", controller.NewIPythonController().CollectMsgFromIPython)
 
 	api := ginRouter.Group("/api")
