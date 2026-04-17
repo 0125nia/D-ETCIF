@@ -21,6 +21,7 @@ type DashboardService struct {
 var dashboardMasteryRelTypes = []string{"MASTERED", "掌握", "CONFIDENCE", "置信", "WEIGHT", "权重"}
 
 const (
+	// 人均 25 条 mid_event 约映射到 100 分（25 * 4 = 100）。
 	engagementMidEventsScale = 4.0
 	sentinelMasteryHigh      = 2.0
 )

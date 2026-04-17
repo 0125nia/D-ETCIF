@@ -31,6 +31,7 @@ func NewProfileController() *ProfileController {
 	}
 }
 
+// resolveStudentID 解析登录上下文中的 userID，返回 studentID、失败原因、是否成功。
 func resolveStudentID(c *gin.Context) (string, string, bool) {
 	studentID, exists := c.Get("userID")
 	if !exists {

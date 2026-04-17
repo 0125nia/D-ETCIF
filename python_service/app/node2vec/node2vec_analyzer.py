@@ -13,6 +13,12 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 
 
 def build_graph(neo4j_url, neo4j_auth):
+    """Build graph from Neo4j.
+
+    Args:
+        neo4j_url (str): Neo4j bolt URI.
+        neo4j_auth (tuple[str, str]): Neo4j username/password tuple.
+    """
 
     try:
         logging.info("开始从Neo4j构建图结构...")

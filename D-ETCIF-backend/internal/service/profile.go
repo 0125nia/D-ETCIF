@@ -324,7 +324,7 @@ func (s *ProfileService) callPythonRecommendationService(weakKps []string) ([]mo
 
 	// 发送POST请求到Python服务
 	if cfg.Config == nil || cfg.Config.Python == nil {
-		return nil, errors.New("python service config is not initialized: ensure Python.BaseURL is configured")
+		return nil, errors.New("python service config is not initialized: set python.baseurl in /D-ETCIF-backend/configs/config.yaml")
 	}
 	baseURL := strings.TrimRight(cfg.Config.Python.BaseURL, "/")
 	if baseURL == "" {
