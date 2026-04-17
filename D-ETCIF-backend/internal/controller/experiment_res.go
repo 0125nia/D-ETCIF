@@ -4,6 +4,7 @@ package controller
 
 import (
 	"fmt"
+	"math"
 
 	"D-ETCIF-backend/internal/config"
 	"D-ETCIF-backend/internal/model"
@@ -17,6 +18,12 @@ type ExperimentResultController struct {
 	ers *service.ExperimentResService
 	es  *service.ExperimentService
 }
+
+const (
+	behaviorScoreMax = 60.0
+	postScoreMax     = 40.0
+	postScoreScale   = 0.4
+)
 
 func NewExperimentResultController() *ExperimentResultController {
 	return &ExperimentResultController{
@@ -84,12 +91,22 @@ func (e *ExperimentResultController) GetOperationResult(ctx *gin.Context) {
 	expID, _ := utils.ParseInt64WithErr(ctx.Param("experiment_id"))
 
 	result, err := e.ers.GetOperationScore(userID.(int64), expID)
-	if err != nil {
-		// 如果没找到，可能实验还没开始，默认给个45分作为基准或0分
-		utils.Success(ctx, gin.H{"operation_score": 45.0})
+	behaviorScore := 45.0
+	if err == nil && result != nil {
+		behaviorScore = result.OperationScore
+	}
+	behaviorScore = math.Max(0, math.Min(behaviorScoreMax, behaviorScore))
+
+	rawPostScore, postErr := e.ers.GetLatestPostQuizSubmitScore(userID.(int64), expID)
+	if postErr != nil {
+		utils.InternalServerError(ctx, "获取评分失败")
 		return
 	}
-	utils.Success(ctx, result)
+	postScore := math.Max(0, math.Min(postScoreMax, rawPostScore*postScoreScale))
+	utils.Success(ctx, gin.H{
+		"behavior_score": behaviorScore,
+		"post_score":     postScore,
+	})
 }
 
 // UploadReport 上传报告文件

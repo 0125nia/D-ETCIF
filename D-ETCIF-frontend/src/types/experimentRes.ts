@@ -21,10 +21,9 @@ export interface ExperimentSummary {
 }
 
 export interface OperationResult {
-  id: number;
-  user_id: number;
-  experiment_id: number;
-  operation_score: number;
+  operation_score?: number;
+  behavior_score?: number;
+  post_score?: number;
 }
 
 // 教师端 - 全班概览项

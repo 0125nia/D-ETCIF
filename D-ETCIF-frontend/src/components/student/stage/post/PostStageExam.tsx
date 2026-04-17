@@ -11,6 +11,8 @@ import { toast } from "@/store";
 import eventBus from "@/utils/eventBus";
 
 const getNowTimestamp = () => Date.now();
+const sanitizeTrackerContentValue = (value: string) =>
+  value.replace(/[;=\n\r]/g, " ").trim();
 
 export default function PostStageExam() {
   const [questions, setQuestions] = useState<PostExamParsed[]>([]);
@@ -25,12 +27,17 @@ export default function PostStageExam() {
   const activeQuestionRef = useRef<{ id: number; startAt: number } | null>(
     null,
   );
+  const questionDurationMapRef = useRef<Record<number, number>>({});
   const hasSubmittedRef = useRef(false);
 
   const getExperimentId = () =>
     currentExperimentId ? currentExperimentId.toString() : "unknown";
 
   const reportQuestionDwell = (questionId: number, durationMs: number) => {
+    if (durationMs > 0) {
+      questionDurationMapRef.current[questionId] =
+        (questionDurationMapRef.current[questionId] || 0) + durationMs;
+    }
     if (durationMs < 300) return;
 
     trackPostEvent({
@@ -137,6 +144,15 @@ export default function PostStageExam() {
       const isCorrect = userAnswer === q.answer.trim();
       resultDetails[q.id] = isCorrect;
       if (isCorrect) correctCount++;
+
+      const durationMs = questionDurationMapRef.current[q.id] || 0;
+      const answerSafe = sanitizeTrackerContentValue(userAnswer);
+      trackPostEvent({
+        experiment_id: getExperimentId(),
+        action_type: "post_quiz_question_answer",
+        score: isCorrect ? 100 : 0,
+        content: `question_id=${q.id};is_correct=${isCorrect};duration_ms=${durationMs};answer=${answerSafe}`,
+      }).catch(console.error);
     });
 
     const totalScore = Math.round((correctCount / questions.length) * 100);
@@ -162,6 +178,7 @@ export default function PostStageExam() {
   // 重置考试
   const handleReset = () => {
     activeQuestionRef.current = null;
+    questionDurationMapRef.current = {};
     hasSubmittedRef.current = false;
     sessionStartRef.current = getNowTimestamp();
     setAnswers({});

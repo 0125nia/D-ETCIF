@@ -90,7 +90,6 @@ export default function Dashboard() {
       </h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* 数据通过 Props 注入，组件彻底变纯 */}
         <KnowledgeHeatMap data={heatmap} loading={loading} />
         <BehaviouralAnalysis data={behavior} loading={loading} />
       </div>

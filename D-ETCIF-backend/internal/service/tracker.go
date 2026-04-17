@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -27,6 +28,21 @@ const (
 	jitterWindowMS   = 200
 	dedupeWindowMS   = 3000
 	maxContentLength = 100 * 1024
+
+	weightDurationCapMS = 5 * 60 * 1000 // 5 min
+
+	preBaseDelta     = 0.010
+	preDurationCoeff = 0.030
+
+	midBaseDelta        = 0.015
+	midDurationCoeff    = 0.035
+	midCorrectBonus     = 0.020
+	midIncorrectPenalty = -0.015
+
+	postBaseDelta        = 0.010
+	postDurationCoeff    = 0.020
+	postCorrectBonus     = 0.050
+	postIncorrectPenalty = -0.030
 )
 
 var (
@@ -38,6 +54,12 @@ type TrackerService struct{}
 
 type TrackerDropError struct {
 	Reason string
+}
+
+type postQuestionSignal struct {
+	QuestionID string
+	IsCorrect  bool
+	DurationMS int
 }
 
 func (e *TrackerDropError) Error() string {
@@ -95,6 +117,145 @@ func hasBlankCode(content string) bool {
 		return false
 	}
 	return true
+}
+
+func clamp(value, minV, maxV float64) float64 {
+	if value < minV {
+		return minV
+	}
+	if value > maxV {
+		return maxV
+	}
+	return value
+}
+
+func normalizeDuration(durationMS int) float64 {
+	if durationMS <= 0 {
+		return 0
+	}
+	return clamp(float64(durationMS)/float64(weightDurationCapMS), 0, 1)
+}
+
+func computeWeightDelta(stage string, durationMS int, isCorrect *bool) float64 {
+	durNorm := normalizeDuration(durationMS)
+	switch strings.ToLower(strings.TrimSpace(stage)) {
+	case "pre":
+		return preBaseDelta + preDurationCoeff*durNorm
+	case "mid":
+		correctness := 0.0
+		if isCorrect != nil {
+			if *isCorrect {
+				correctness = midCorrectBonus
+			} else {
+				correctness = midIncorrectPenalty
+			}
+		}
+		return midBaseDelta + midDurationCoeff*durNorm + correctness
+	case "post":
+		correctness := 0.0
+		if isCorrect != nil {
+			if *isCorrect {
+				correctness = postCorrectBonus
+			} else {
+				correctness = postIncorrectPenalty
+			}
+		}
+		return postBaseDelta + postDurationCoeff*durNorm + correctness
+	default:
+		return 0
+	}
+}
+
+func parseEventContent(content string) map[string]string {
+	out := map[string]string{}
+	parts := strings.FieldsFunc(content, func(r rune) bool {
+		return r == ';' || r == '&' || r == '\n' || r == '\r'
+	})
+	for _, part := range parts {
+		part = strings.TrimSpace(part)
+		if part == "" {
+			continue
+		}
+		kv := strings.SplitN(part, "=", 2)
+		if len(kv) != 2 {
+			continue
+		}
+		key := strings.ToLower(strings.TrimSpace(kv[0]))
+		val := strings.TrimSpace(kv[1])
+		if key != "" {
+			out[key] = val
+		}
+	}
+	return out
+}
+
+func parseBoolFromMap(m map[string]string, keys ...string) (bool, bool) {
+	for _, key := range keys {
+		raw, ok := m[strings.ToLower(strings.TrimSpace(key))]
+		if !ok {
+			continue
+		}
+		v := strings.ToLower(strings.TrimSpace(raw))
+		switch v {
+		case "1", "true", "yes", "y":
+			return true, true
+		case "0", "false", "no", "n":
+			return false, true
+		}
+	}
+	return false, false
+}
+
+func parseIntFromMap(m map[string]string, keys ...string) (int, bool) {
+	for _, key := range keys {
+		raw, ok := m[strings.ToLower(strings.TrimSpace(key))]
+		if !ok {
+			continue
+		}
+		v, err := strconv.Atoi(strings.TrimSpace(raw))
+		if err == nil {
+			return v, true
+		}
+	}
+	return 0, false
+}
+
+func parseStringFromMap(m map[string]string, keys ...string) (string, bool) {
+	for _, key := range keys {
+		raw, ok := m[strings.ToLower(strings.TrimSpace(key))]
+		if !ok {
+			continue
+		}
+		raw = strings.TrimSpace(raw)
+		if raw != "" {
+			return raw, true
+		}
+	}
+	return "", false
+}
+
+func extractPostQuestionSignal(event *model.PostEvent) (*postQuestionSignal, bool) {
+	if event == nil {
+		return nil, false
+	}
+	parsed := parseEventContent(event.Content)
+	questionID, ok := parseStringFromMap(parsed, "question_id", "qid", "questionid")
+	if !ok {
+		return nil, false
+	}
+	isCorrect, ok := parseBoolFromMap(parsed, "is_correct", "correct", "success")
+	if !ok {
+		return nil, false
+	}
+	durationMS, ok := parseIntFromMap(parsed, "duration_ms", "duration")
+	if !ok || durationMS <= 0 {
+		durationMS = minDurationMS
+	}
+	return &postQuestionSignal{
+		QuestionID: questionID,
+		IsCorrect:  isCorrect,
+		DurationMS: durationMS,
+	}, true
 }
 
 func validatePreEvent(event *model.PreEvent) error {
@@ -223,6 +384,133 @@ func writeNeo4j(ctx context.Context, cypher string, params map[string]interface{
 	return err
 }
 
+func upsertKnowledgeWeightByCypher(ctx context.Context, cypher string, params map[string]interface{}) error {
+	if config.Neo4jDriver == nil {
+		return errors.New("neo4j is not initialized")
+	}
+	session := config.Neo4jDriver.NewSession(ctx, neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	defer session.Close(ctx)
+	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
+		_, runErr := tx.Run(ctx, cypher, params)
+		return nil, runErr
+	})
+	return err
+}
+
+func updatePreKnowledgeWeight(ctx context.Context, event *model.PreEvent) error {
+	delta := computeWeightDelta("pre", event.Duration, nil)
+	now := time.Now().Format(time.RFC3339)
+	cypher := `
+		MERGE (s:Student {id: $student_id})
+		MATCH (r)
+		WHERE toString(coalesce(r.res_id, r.id, r.resource_id)) = $resource_id
+		   OR toString(coalesce(r.name, r.resource_name, r.source_name)) = $resource_name
+		MATCH (r)-[]-(kp)
+		WHERE (kp:KnowledgePoint OR kp:知识点)
+		WITH DISTINCT s, kp
+		OPTIONAL MATCH (s)-[rel:WEIGHT {experiment_id: $experiment_id}]->(kp)
+		WITH s, kp, coalesce(rel.weight, rel.confidence, 0.0) AS current
+		WITH s, kp, CASE
+			WHEN current + $delta < 0.0 THEN 0.0
+			WHEN current + $delta > 1.0 THEN 1.0
+			ELSE current + $delta
+		END AS next_weight
+		MERGE (s)-[rel:WEIGHT {experiment_id: $experiment_id}]->(kp)
+		SET rel.weight = next_weight,
+		    rel.confidence = next_weight,
+		    rel.last_updated = $now,
+		    rel.last_action_type = 'pre_preview',
+		    rel.last_duration_ms = $duration_ms
+	`
+	return upsertKnowledgeWeightByCypher(ctx, cypher, map[string]interface{}{
+		"student_id":    event.StudentID,
+		"experiment_id": event.ExperimentID,
+		"resource_id":   event.ResourceID,
+		"resource_name": event.ResourceName,
+		"duration_ms":   event.Duration,
+		"delta":         delta,
+		"now":           now,
+	})
+}
+
+func updateMidKnowledgeWeight(ctx context.Context, event *model.MidEvent) error {
+	var correctnessPtr *bool
+	parsed := parseEventContent(event.Content)
+	if isCorrect, ok := parseBoolFromMap(parsed, "success", "is_correct", "correct"); ok {
+		correctnessPtr = &isCorrect
+	}
+	delta := computeWeightDelta("mid", event.Duration, correctnessPtr)
+	now := time.Now().Format(time.RFC3339)
+	cypher := `
+		MERGE (s:Student {id: $student_id})
+		MATCH (kp)
+		WHERE (kp:KnowledgePoint OR kp:知识点)
+		  AND toString(coalesce(kp.kp_name, kp.name, kp.id, kp.kp_id)) = $kp_name
+		WITH DISTINCT s, kp
+		OPTIONAL MATCH (s)-[rel:WEIGHT {experiment_id: $experiment_id}]->(kp)
+		WITH s, kp, coalesce(rel.weight, rel.confidence, 0.0) AS current
+		WITH s, kp, CASE
+			WHEN current + $delta < 0.0 THEN 0.0
+			WHEN current + $delta > 1.0 THEN 1.0
+			ELSE current + $delta
+		END AS next_weight
+		MERGE (s)-[rel:WEIGHT {experiment_id: $experiment_id}]->(kp)
+		SET rel.weight = next_weight,
+		    rel.confidence = next_weight,
+		    rel.last_updated = $now,
+		    rel.last_action_type = $action_type,
+		    rel.last_duration_ms = $duration_ms
+	`
+	return upsertKnowledgeWeightByCypher(ctx, cypher, map[string]interface{}{
+		"student_id":    event.StudentID,
+		"experiment_id": event.ExperimentID,
+		"kp_name":       strings.TrimSpace(event.KpName),
+		"action_type":   event.ActionType,
+		"duration_ms":   event.Duration,
+		"delta":         delta,
+		"now":           now,
+	})
+}
+
+func updatePostKnowledgeWeightByQuestion(ctx context.Context, event *model.PostEvent, signal *postQuestionSignal) error {
+	correctness := signal.IsCorrect
+	delta := computeWeightDelta("post", signal.DurationMS, &correctness)
+	now := time.Now().Format(time.RFC3339)
+	cypher := `
+		MERGE (s:Student {id: $student_id})
+		MATCH (q)
+		WHERE toString(coalesce(q.q_id, q.id, q.question_id, q.qid)) = $question_id
+		MATCH (q)-[]-(kp)
+		WHERE (kp:KnowledgePoint OR kp:知识点)
+		WITH DISTINCT s, kp
+		OPTIONAL MATCH (s)-[rel:WEIGHT {experiment_id: $experiment_id}]->(kp)
+		WITH s, kp, coalesce(rel.weight, rel.confidence, 0.0) AS current
+		WITH s, kp, CASE
+			WHEN current + $delta < 0.0 THEN 0.0
+			WHEN current + $delta > 1.0 THEN 1.0
+			ELSE current + $delta
+		END AS next_weight
+		MERGE (s)-[rel:WEIGHT {experiment_id: $experiment_id}]->(kp)
+		SET rel.weight = next_weight,
+		    rel.confidence = next_weight,
+		    rel.last_updated = $now,
+		    rel.last_action_type = $action_type,
+		    rel.last_question_id = $question_id,
+		    rel.last_is_correct = $is_correct,
+		    rel.last_duration_ms = $duration_ms
+	`
+	return upsertKnowledgeWeightByCypher(ctx, cypher, map[string]interface{}{
+		"student_id":    event.StudentID,
+		"experiment_id": event.ExperimentID,
+		"question_id":   signal.QuestionID,
+		"is_correct":    signal.IsCorrect,
+		"duration_ms":   signal.DurationMS,
+		"action_type":   event.ActionType,
+		"delta":         delta,
+		"now":           now,
+	})
+}
+
 // TrackPre 实验前数据处理
 func (s *TrackerService) TrackPre(event *model.PreEvent) error {
 	if err := validatePreEvent(event); err != nil {
@@ -263,6 +551,11 @@ func (s *TrackerService) TrackPre(event *model.PreEvent) error {
 	if err := writeNeo4j(ctx, cypher, params); err != nil {
 		tx.Rollback()
 		utils.Errorf("TrackPre Neo4j 存储失败: %v", err)
+		return err
+	}
+	if err := updatePreKnowledgeWeight(ctx, event); err != nil {
+		tx.Rollback()
+		utils.Errorf("TrackPre Neo4j 权重更新失败: %v", err)
 		return err
 	}
 
@@ -331,6 +624,13 @@ func (s *TrackerService) TrackMid(event *model.MidEvent) error {
 		utils.Errorf("TrackMid Neo4j 存储失败: %v", err)
 		return err
 	}
+	if strings.TrimSpace(event.KpName) != "" {
+		if err := updateMidKnowledgeWeight(ctx, event); err != nil {
+			tx.Rollback()
+			utils.Errorf("TrackMid Neo4j 权重更新失败: %v", err)
+			return err
+		}
+	}
 
 	if err := tx.Commit().Error; err != nil {
 		return err
@@ -394,6 +694,13 @@ func (s *TrackerService) TrackPost(event *model.PostEvent) error {
 		tx.Rollback()
 		utils.Errorf("TrackPost Neo4j 存储失败: %v", err)
 		return err
+	}
+	if signal, ok := extractPostQuestionSignal(event); ok {
+		if err := updatePostKnowledgeWeightByQuestion(ctx, event, signal); err != nil {
+			tx.Rollback()
+			utils.Errorf("TrackPost Neo4j 权重更新失败: %v", err)
+			return err
+		}
 	}
 
 	if err := tx.Commit().Error; err != nil {

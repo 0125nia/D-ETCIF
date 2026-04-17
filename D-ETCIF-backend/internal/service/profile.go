@@ -181,15 +181,8 @@ func (s *ProfileService) GetStudyReport(studentID string) (*model.StudyReportDat
 
 // GetRecommendations 根据学生画像和历史数据生成个性化推荐
 func (s *ProfileService) GetRecommendations(studentID string) ([]model.ResourceRecommendation, error) {
-	// 1. 获取学生的薄弱知识点
-	weakKps, err := s.getWeakKnowledgePoints(studentID)
-	if err != nil {
-		// 如果获取薄弱知识点失败，使用默认知识点
-		weakKps = []string{"数据可视化的定义与作用", "12种常见可视化图表类型"}
-	}
-
-	// 2. 调用Python服务的API获取推荐
-	recs, err := s.callPythonRecommendationService(weakKps)
+	// 由 Python 服务内部完成薄弱点推断和资源推荐
+	recs, err := s.callPythonRecommendationService(studentID)
 	if err != nil {
 		return []model.ResourceRecommendation{
 			{ID: 1, Name: "数据可视化", Link: "/knowledge/数据可视化"},
@@ -242,11 +235,11 @@ func (s *ProfileService) getWeakKnowledgePoints(studentID string) ([]string, err
 }
 
 // callPythonRecommendationService 调用Python服务的API获取推荐
-func (s *ProfileService) callPythonRecommendationService(weakKps []string) ([]model.ResourceRecommendation, error) {
+func (s *ProfileService) callPythonRecommendationService(studentID string) ([]model.ResourceRecommendation, error) {
 	// 准备请求数据
 	reqData := map[string]interface{}{
-		"weak_kps": weakKps,
-		"topk":     3,
+		"student_id": studentID,
+		"topk":       3,
 	}
 	reqBody, err := json.Marshal(reqData)
 	if err != nil {

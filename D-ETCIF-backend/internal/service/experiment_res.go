@@ -4,6 +4,7 @@ package service
 
 import (
 	"D-ETCIF-backend/internal/model"
+	"errors"
 
 	"gorm.io/gorm"
 )
@@ -11,6 +12,8 @@ import (
 type ExperimentResService struct {
 	db *gorm.DB
 }
+
+const actionTypePostQuizSubmit = "post_quiz_submit"
 
 func NewExperimentResService(db *gorm.DB) *ExperimentResService {
 	return &ExperimentResService{db: db}
@@ -33,6 +36,21 @@ func (s *ExperimentResService) GetOperationScore(userID, expID int64) (*model.Op
 	var result model.OperationResult
 	err := s.db.Where("user_id = ? AND experiment_id = ?", userID, expID).First(&result).Error
 	return &result, err
+}
+
+func (s *ExperimentResService) GetLatestPostQuizSubmitScore(userID, expID int64) (float64, error) {
+	var event model.PostEvent
+	err := s.db.
+		Where("student_id = ? AND experiment_id = ? AND action_type = ?", userID, expID, actionTypePostQuizSubmit).
+		Order("created_at DESC, id DESC").
+		First(&event).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return 0, nil
+		}
+		return 0, err
+	}
+	return float64(event.Score), nil
 }
 
 // GetReport 获取报告
