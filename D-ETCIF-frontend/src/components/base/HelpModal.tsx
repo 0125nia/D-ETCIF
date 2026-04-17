@@ -1,9 +1,10 @@
 // Package base
 // D-ETCIF-frontend/src/components/base/HelpModal.tsx
 import { useState } from "react";
-import axios from "axios";
 import { toast } from "@/store";
-import { useExperimentStore } from "@/store";
+import { useAuthStore, useExperimentStore } from "@/store";
+import { submitHelp } from "@/services/help";
+import type { Stage } from "@/types";
 
 export default function HelpModal({
   open,
@@ -16,23 +17,38 @@ export default function HelpModal({
   const [content, setContent] = useState("");
   const [loading, setLoading] = useState(false);
   const { currentExperimentId, currentStage } = useExperimentStore();
-
+  const user = useAuthStore((s) => s.user);
   if (!open) return null;
+
+  const stageToNumber = (stage: Stage | null): number | null => {
+    if (!stage) return null;
+    if (stage === "PRE") return 1;
+    if (stage === "DOING") return 2;
+    if (stage === "POST") return 3;
+    return null;
+  };
 
   const handleSubmit = async () => {
     if (!title.trim() || !content.trim()) {
       toast.warning("请填写完整求助信息");
       return;
     }
+    const experimentStage = stageToNumber(currentStage);
+    if (!user?.id || !currentExperimentId || experimentStage === null) {
+      toast.error("实验上下文不完整，无法提交求助");
+      return;
+    }
 
     try {
       setLoading(true);
 
-      await axios.post("/api/help", {
-        title,
-        content,
-        experimentId: currentExperimentId,
-        stage: currentStage,
+      await submitHelp({
+        user_id: user.id,
+        experiment_id: currentExperimentId,
+        experiment_stage: experimentStage,
+        title: title.trim(),
+        content: content.trim(),
+        status: 0,
       });
 
       toast.success("求助提交成功");
@@ -40,7 +56,7 @@ export default function HelpModal({
       setTitle("");
       setContent("");
       onClose();
-    } catch (e) {
+    } catch {
       toast.error("提交失败");
     } finally {
       setLoading(false);
