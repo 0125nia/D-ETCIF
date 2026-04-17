@@ -19,6 +19,12 @@ type ExperimentResultController struct {
 	es  *service.ExperimentService
 }
 
+const (
+	behaviorScoreMax = 60.0
+	postScoreMax     = 40.0
+	postScoreScale   = 0.4
+)
+
 func NewExperimentResultController() *ExperimentResultController {
 	return &ExperimentResultController{
 		ers: service.NewExperimentResService(config.DB),
@@ -89,14 +95,14 @@ func (e *ExperimentResultController) GetOperationResult(ctx *gin.Context) {
 	if err == nil && result != nil {
 		behaviorScore = result.OperationScore
 	}
-	behaviorScore = math.Max(0, math.Min(60, behaviorScore))
+	behaviorScore = math.Max(0, math.Min(behaviorScoreMax, behaviorScore))
 
 	rawPostScore, postErr := e.ers.GetLatestPostQuizSubmitScore(userID.(int64), expID)
 	if postErr != nil {
 		utils.InternalServerError(ctx, "获取评分失败")
 		return
 	}
-	postScore := math.Max(0, math.Min(40, rawPostScore*0.4))
+	postScore := math.Max(0, math.Min(postScoreMax, rawPostScore*postScoreScale))
 	utils.Success(ctx, gin.H{
 		"behavior_score": behaviorScore,
 		"post_score":     postScore,

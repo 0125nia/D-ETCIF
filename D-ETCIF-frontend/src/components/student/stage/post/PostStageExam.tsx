@@ -11,6 +11,8 @@ import { toast } from "@/store";
 import eventBus from "@/utils/eventBus";
 
 const getNowTimestamp = () => Date.now();
+const sanitizeTrackerContentValue = (value: string) =>
+  value.replace(/[;=\n\r]/g, " ").trim();
 
 export default function PostStageExam() {
   const [questions, setQuestions] = useState<PostExamParsed[]>([]);
@@ -144,7 +146,7 @@ export default function PostStageExam() {
       if (isCorrect) correctCount++;
 
       const durationMs = questionDurationMapRef.current[q.id] || 0;
-      const answerSafe = userAnswer.replace(/[;\n\r]/g, " ").trim();
+      const answerSafe = sanitizeTrackerContentValue(userAnswer);
       trackPostEvent({
         experiment_id: getExperimentId(),
         action_type: "post_quiz_question_answer",

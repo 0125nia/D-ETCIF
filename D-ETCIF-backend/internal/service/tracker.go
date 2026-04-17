@@ -152,9 +152,13 @@ func computeWeightDelta(stage string, durationMS int, isCorrect *bool) float64 {
 		}
 		return midBaseDelta + midDurationCoeff*durNorm + correctness
 	case "post":
-		correctness := postIncorrectPenalty
-		if isCorrect != nil && *isCorrect {
-			correctness = postCorrectBonus
+		correctness := 0.0
+		if isCorrect != nil {
+			if *isCorrect {
+				correctness = postCorrectBonus
+			} else {
+				correctness = postIncorrectPenalty
+			}
 		}
 		return postBaseDelta + postDurationCoeff*durNorm + correctness
 	default:
@@ -432,8 +436,8 @@ func updatePreKnowledgeWeight(ctx context.Context, event *model.PreEvent) error 
 func updateMidKnowledgeWeight(ctx context.Context, event *model.MidEvent) error {
 	var correctnessPtr *bool
 	parsed := parseEventContent(event.Content)
-	if parsedCorrectness, ok := parseBoolFromMap(parsed, "success", "is_correct", "correct"); ok {
-		correctnessPtr = &parsedCorrectness
+	if isCorrect, ok := parseBoolFromMap(parsed, "success", "is_correct", "correct"); ok {
+		correctnessPtr = &isCorrect
 	}
 	delta := computeWeightDelta("mid", event.Duration, correctnessPtr)
 	now := time.Now().Format(time.RFC3339)
