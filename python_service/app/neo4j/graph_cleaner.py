@@ -1,7 +1,11 @@
 import json
-from collections import defaultdict
+from pathlib import Path
 
-def clean_knowledge_graph(input_file, output_file):
+from app.core.paths import GRAPH_EXPORTED_FILE, GRAPH_CLEANED_FILE, ensure_parent
+
+def clean_knowledge_graph(input_file=None, output_file=None):
+    input_file = input_file or str(GRAPH_EXPORTED_FILE)
+    output_file = output_file or str(GRAPH_CLEANED_FILE)
     # 1. 加载数据
     with open(input_file, 'r', encoding='utf-8') as f:
         raw_data = json.load(f)
@@ -54,10 +58,11 @@ def clean_knowledge_graph(input_file, output_file):
     # 3. 导出清洗后的数据
     cleaned_data = list(processed_edges.values())
     
+    ensure_parent(Path(output_file))
     with open(output_file, 'w', encoding='utf-8') as f:
         json.dump(cleaned_data, f, ensure_ascii=False, indent=4)
 
     print(f"清洗完成！原始三元组: {len(raw_data)} | 清洗后: {len(cleaned_data)}")
 
 if __name__ == "__main__":
-    clean_knowledge_graph('exported_domain_kg.json', 'cleaned_domain_kg.json')
+    clean_knowledge_graph()

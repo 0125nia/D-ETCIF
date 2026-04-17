@@ -2,9 +2,10 @@ import json
 import os
 from py2neo import Graph
 from dotenv import load_dotenv
+from app.core.paths import ENV_FILE, GRAPH_CLEANED_FILE
 
 # 1. 配置加载
-load_dotenv(override=True)
+load_dotenv(dotenv_path=ENV_FILE, override=True)
 
 NEO4J_URI = os.getenv("NEO4J_URI")
 NEO4J_USER = os.getenv("NEO4J_USER")
@@ -84,5 +85,4 @@ class GraphRebuilder:
 
 if __name__ == "__main__":
     rebuilder = GraphRebuilder()
-    # 填入你的 JSON 文件路径
-    rebuilder.rebuild('./cleaned_domain_kg.json')
+    rebuilder.rebuild(str(GRAPH_CLEANED_FILE))

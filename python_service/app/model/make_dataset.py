@@ -1,7 +1,8 @@
 import os
 import re
 import random
-from data_source import DOMAIN_DICT
+from app.model.data_source import DOMAIN_DICT
+from app.core.paths import INPUT_PROCESSED_DIR, INPUT_ANNOTATED_DIR
 
 
 NEG_KEEP_PROB = 0.3
@@ -56,8 +57,8 @@ def auto_tagging(text, domain_dict):
 
 def create_ner_data():
 
-    txt_dir = "./data/processed"
-    save_dir = "./data/annotated"
+    txt_dir = str(INPUT_PROCESSED_DIR)
+    save_dir = str(INPUT_ANNOTATED_DIR)
     os.makedirs(save_dir, exist_ok=True)
 
     all_data = []

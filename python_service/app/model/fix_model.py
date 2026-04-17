@@ -2,7 +2,9 @@ import json
 import os
 from transformers import BertConfig, BertForTokenClassification
 
-model_path = "./d_etcif_model"
+from app.core.paths import NER_FINAL_MODEL_DIR
+
+model_path = str(NER_FINAL_MODEL_DIR)
 
 # 1. 定义正确的映射
 labels = ["O", "B-KP", "I-KP", "B-TASK", "I-TASK", "B-EXP", "I-EXP"]

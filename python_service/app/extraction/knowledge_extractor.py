@@ -1,10 +1,13 @@
 from transformers import pipeline
 import re
 
+from app.core.paths import NER_FINAL_MODEL_DIR
+
 
 class EducationalKnowledgeEngine:
 
-    def __init__(self, model_path="./d_etcif_model"):
+    def __init__(self, model_path=None):
+        model_path = model_path or str(NER_FINAL_MODEL_DIR)
 
         self.extractor = pipeline(
             "ner",

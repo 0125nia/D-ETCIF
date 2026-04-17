@@ -3,4 +3,4 @@ PROFILE_DIR=$(ipython profile locate)
 
 STARTUP_DIR="$PROFILE_DIR/startup"
 
-cp -r "$SCRIPT_DIR/../00-monitor.py" "$STARTUP_DIR/00-monitor.py"
+cp -r "$SCRIPT_DIR/../monitor/ipython_monitor.py" "$STARTUP_DIR/00-monitor.py"

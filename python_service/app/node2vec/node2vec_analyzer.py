@@ -4,6 +4,9 @@ from py2neo import Graph
 from gensim.models import Word2Vec
 import logging
 import os
+from pathlib import Path
+
+from app.core.paths import NODE2VEC_MODEL_PATH, ensure_parent
 
 # 配置日志
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -121,6 +124,7 @@ def save_model(model, model_path):
     """保存模型"""
     try:
         logging.info(f"保存模型到: {model_path}")
+        ensure_parent(Path(model_path))
         model.save(model_path)
         logging.info("模型保存成功")
     except Exception as e:
@@ -198,14 +202,16 @@ def generate_recommendations(model, node_type, weak_kps, topk=3):
 
 
 class Node2VecAnalyzer:
-    def __init__(self, neo4j_url="bolt://localhost:7687", neo4j_auth=None):
+    def __init__(self, neo4j_url="bolt://localhost:7687", neo4j_auth=None, model_path=None):
         self.neo4j_url = neo4j_url
         if neo4j_auth is None:
             self.neo4j_auth = (
-"neo4j", "password"
+                os.getenv("NEO4J_USER", "neo4j"),
+                os.getenv("NEO4J_PASSWORD", "password"),
             )
         else:
             self.neo4j_auth = neo4j_auth
+        self.model_path = model_path or str(NODE2VEC_MODEL_PATH)
         self.graph = None
         self.node_type = None
         self.model = None
@@ -234,10 +240,15 @@ class Node2VecAnalyzer:
     
     def generate_recommendations(self, weak_kps, topk=3):
         if self.model is None:
-            self.train_model()
+            if os.path.exists(self.model_path):
+                self.load_model(self.model_path)
+            else:
+                self.train_model()
         if self.model is None:
             logging.warning("模型未就绪，无法生成推荐")
             return {}
+        if not os.path.exists(self.model_path):
+            self.save_model(self.model_path)
         return generate_recommendations(self.model, self.node_type, weak_kps, topk)
 
 
@@ -259,7 +270,7 @@ if __name__ == "__main__":
         raise SystemExit(1)
     
     # 4. 保存模型（下次直接加载，不用重新训练）
-    analyzer.save_model("exp_node2vec.model")
+    analyzer.save_model(str(NODE2VEC_MODEL_PATH))
     
     # 5. 模拟一个学生的薄弱知识点（替换为你系统的真实数据）
     student_weak_kps = [

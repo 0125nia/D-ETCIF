@@ -6,9 +6,10 @@ from contextlib import asynccontextmanager
 
 # 导入Node2Vec分析器
 from app.node2vec.node2vec_analyzer import Node2VecAnalyzer
+from app.core.paths import ENV_FILE, NODE2VEC_MODEL_PATH
 
 # 加载环境变量
-load_dotenv()
+load_dotenv(dotenv_path=ENV_FILE)
 
 # 初始化Node2Vec分析器
 neo4j_url = os.getenv("NEO4J_URI", "bolt://localhost:7687")
@@ -17,7 +18,8 @@ neo4j_password = os.getenv("NEO4J_PASSWORD", "password")
 
 analyzer = Node2VecAnalyzer(
     neo4j_url=neo4j_url,
-    neo4j_auth=(neo4j_user, neo4j_password)
+    neo4j_auth=(neo4j_user, neo4j_password),
+    model_path=str(NODE2VEC_MODEL_PATH),
 )
 
 # 生命周期管理
@@ -27,6 +29,8 @@ async def lifespan(app: FastAPI):
     # 启动时执行
     print("正在构建图结构...")
     analyzer.build_graph()
+    # 如果本地已有模型则直接加载，避免每次启动重训
+    analyzer.load_model(str(NODE2VEC_MODEL_PATH))
     print("服务启动完成！")
     yield
     # 关闭时执行
@@ -96,7 +100,7 @@ def recommend_resources(request: RecommendationRequest):
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(
-        "app",
+        "app.api.main:app",
         host="0.0.0.0",
         port=8000,
         reload=True

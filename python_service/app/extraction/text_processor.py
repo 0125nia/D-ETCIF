@@ -1,6 +1,8 @@
 import re
 import os
 
+from app.core.paths import INPUT_RAW_DIR, INPUT_PROCESSED_DIR
+
 def preprocess_text(file_path):
     with open(file_path, 'r', encoding='utf-8') as f:
         text = f.read()
@@ -8,7 +10,7 @@ def preprocess_text(file_path):
     sentences = re.split(r'[。\n]', text)
     return [s.strip() for s in sentences if len(s.strip()) > 5]
 
-def batch_preprocess_text(folder_path, output_folder="../data/processed"):
+def batch_preprocess_text(folder_path, output_folder):
     os.makedirs(output_folder, exist_ok=True)
     
     for filename in os.listdir(folder_path):
@@ -29,5 +31,6 @@ def batch_preprocess_text(folder_path, output_folder="../data/processed"):
             except Exception as e:
                 print(f"处理失败 {filename}: {e}")
 
-                
-corpus = batch_preprocess_text("../data/raw")
+
+if __name__ == "__main__":
+    batch_preprocess_text(str(INPUT_RAW_DIR), str(INPUT_PROCESSED_DIR))

@@ -12,6 +12,8 @@ from transformers import (
 )
 from seqeval.metrics import classification_report
 
+from app.core.paths import INPUT_ANNOTATED_DIR, NER_CHECKPOINT_DIR, NER_FINAL_MODEL_DIR
+
 
 labels = ["O", "B-KP", "I-KP", "B-TASK", "I-TASK", "B-EXP", "I-EXP"]
 label2id = {l: i for i, l in enumerate(labels)}
@@ -72,8 +74,8 @@ def train():
     model_name = "bert-base-chinese"
     tokenizer = BertTokenizerFast.from_pretrained(model_name)
 
-    train_s, train_t = load_tsv("data/annotated/train.tsv")
-    dev_s, dev_t = load_tsv("data/annotated/dev.tsv")
+    train_s, train_t = load_tsv(str(INPUT_ANNOTATED_DIR / "train.tsv"))
+    dev_s, dev_t = load_tsv(str(INPUT_ANNOTATED_DIR / "dev.tsv"))
 
     train_dataset = Dataset.from_dict({"tokens": train_s, "ner_tags": train_t})
     dev_dataset = Dataset.from_dict({"tokens": dev_s, "ner_tags": dev_t})
@@ -125,7 +127,7 @@ def train():
     )
 
     args = TrainingArguments(
-        output_dir="./ner_ckpt",
+        output_dir=str(NER_CHECKPOINT_DIR / "train_runs"),
         num_train_epochs=6,
         per_device_train_batch_size=16,
         evaluation_strategy="epoch", 
@@ -145,8 +147,9 @@ def train():
 
     trainer.train()
 
-    trainer.save_model("./d_etcif_model")
-    tokenizer.save_pretrained("./d_etcif_model")
+    NER_FINAL_MODEL_DIR.mkdir(parents=True, exist_ok=True)
+    trainer.save_model(str(NER_FINAL_MODEL_DIR))
+    tokenizer.save_pretrained(str(NER_FINAL_MODEL_DIR))
 
 
 if __name__ == "__main__":

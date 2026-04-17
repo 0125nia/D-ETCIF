@@ -5,9 +5,10 @@ Neo4j 图数据库构建：节点创建 + 关系写入
 from py2neo import Graph, Node, Relationship
 import os
 from dotenv import load_dotenv
+from app.core.paths import ENV_FILE
 
 # 加载 .env 文件
-load_dotenv(override=True)
+load_dotenv(dotenv_path=ENV_FILE, override=True)
 
 NEO4J_URI = os.getenv("NEO4J_URI")
 NEO4J_USER = os.getenv("NEO4J_USER")

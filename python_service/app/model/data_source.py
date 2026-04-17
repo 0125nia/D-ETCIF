@@ -1,5 +1,8 @@
+from app.core.paths import INPUT_PROCESSED_DIR
+
+
 def get_all_corpus():
-    with open("../data/processed/corpus.txt", "r", encoding="utf-8") as f:
+    with open(INPUT_PROCESSED_DIR / "corpus.txt", "r", encoding="utf-8") as f:
         txt = f.read()
     return txt
 

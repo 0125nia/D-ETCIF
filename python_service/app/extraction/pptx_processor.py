@@ -2,6 +2,8 @@ import os
 from pptx import Presentation
 from pptx.enum.shapes import MSO_SHAPE_TYPE
 
+from app.core.paths import INPUT_RAW_DIR, INPUT_PROCESSED_DIR
+
 def extract_text_from_shape(shape):
     text_runs = []
     
@@ -22,7 +24,7 @@ def extract_text_from_shape(shape):
             text_runs.append("\t".join(row_text))
     
     return text_runs
-def batch_extract_pptx(folder_path, output_folder="../data/processed"):
+def batch_extract_pptx(folder_path, output_folder):
     os.makedirs(output_folder, exist_ok=True)
     
     for filename in os.listdir(folder_path):
@@ -48,4 +50,5 @@ def extract_text_from_pptx_advanced(pptx_path):
     
     return "\n".join(full_text)
 # 使用示例：把你的 PPTX 文件夹路径填进去
-batch_extract_pptx("../data/raw")
+if __name__ == "__main__":
+    batch_extract_pptx(str(INPUT_RAW_DIR), str(INPUT_PROCESSED_DIR))

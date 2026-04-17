@@ -1,12 +1,21 @@
 from py2neo import Graph, Node, Relationship
+import os
+from dotenv import load_dotenv
+from app.core.paths import ENV_FILE
+
+load_dotenv(dotenv_path=ENV_FILE, override=True)
 
 
 class KGBuilder:
 
     def __init__(self,
-                 uri="bolt://localhost:7687",
-                 user="neo4j",
-                 password="123456"):
+                 uri=None,
+                 user=None,
+                 password=None):
+
+        uri = uri or os.getenv("NEO4J_URI", "bolt://localhost:7687")
+        user = user or os.getenv("NEO4J_USER", "neo4j")
+        password = password or os.getenv("NEO4J_PASSWORD", "password")
 
         self.graph = Graph(uri, auth=(user, password))
 

@@ -52,3 +52,6 @@ backend.exe
 SYSTEM.md
 *.model
 test_*.*
+.conda
+.env
+tests

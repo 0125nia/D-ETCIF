@@ -1,36 +1,34 @@
 # python_service
 
-本目录是 D-ETCIF 的 Python 侧辅助服务/实验代码集合
+本目录是 D-ETCIF 的算法层服务。
 
-> 说明：此目录更偏“分析/实验”性质，部分脚本末尾包含示例调用，直接运行会读写本地数据目录。
+重构后遵循两条规则：
+
+1. 所有代码都在 `app/`。
+2. 所有非代码数据都在 `data/`，并按输入/图谱/模型分包。
 
 ## 目录结构
 
 ```
 python_service
-├── 00-monitor.py
-├── analysis
-│   ├── data
-│   │   ├── annotated
-│   │   ├── processed
-│   │   ├── raw
-│   │   └── res
-│   ├── extraction
-│   │   ├── data_source.py
-│   │   ├── extractor.py
-│   │   ├── pptx_processor.py
-│   │   └── text_processor.py
-│   ├── main.py
-│   ├── neo4j
-│   │   ├── graph_builder.py
-│   │   └── query.py
-│   └── tests
-├── ipynb
-│   └── test.ipynb
+├── app
+│   ├── api               # FastAPI 入口
+│   ├── core              # 路径与通用配置
+│   ├── extraction        # 文本/课件抽取
+│   ├── model             # 数据集构造与 NER 训练
+│   ├── neo4j             # 图谱导出/清洗/回灌
+│   ├── node2vec          # 推荐模型
+│   ├── monitor           # Jupyter 监控上报
+│   ├── scripts           # 启动脚本
+│   └── tests             # 测试脚本
+├── data
+│   ├── inputs            # 原始/处理后/标注数据
+│   ├── graph             # 图谱引导/导出/清洗结果
+│   ├── models            # NER/Node2Vec 模型和检查点
+│   └── notebooks         # notebook 与相关附件
+├── .env
+├── requirements.txt
 ├── README.md
-└── scripts
-    ├── ipynb_monitor.sh
-    └── ipynb.sh
 ```
 
 ## 环境要求
@@ -40,11 +38,11 @@ python_service
 
 ## 启动服务（FastAPI）
 
-服务入口在 [analysis/app/main.py](analysis/app/main.py)
+服务入口在 `app/api/main.py`。
 
 ```bash
 cd python_service
-uvicorn main:app --app-dir analysis/app --reload --port 8000
+uvicorn app.api.main:app --reload --port 8000
 ```
 
 启动后访问：
