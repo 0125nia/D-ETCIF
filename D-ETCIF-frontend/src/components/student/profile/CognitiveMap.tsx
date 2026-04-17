@@ -12,6 +12,16 @@ interface Props {
   loading: boolean;
 }
 
+interface GraphNode {
+  type?: string;
+  name?: string;
+  expid?: string | number;
+}
+
+interface GraphLink {
+  value?: number;
+}
+
 const CognitiveMap = ({ data, loading }: Props) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ width: 400, height: 256 });
@@ -42,7 +52,7 @@ const CognitiveMap = ({ data, loading }: Props) => {
     links: data.links.map((link) => ({ ...link })),
   };
 
-  const getNodeColor = (node: any) => {
+  const getNodeColor = (node: GraphNode) => {
     return node.type === "Student" ? "#4f46e5" : "#10b981";
   };
 
@@ -53,9 +63,9 @@ const CognitiveMap = ({ data, loading }: Props) => {
           graphData={graphData}
           width={dimensions.width}
           height={dimensions.height}
-          nodeLabel={(node: any) => `${node.name} | 实验：${node.expid}`}
+          nodeLabel={(node: GraphNode) => `${node.name} | 实验：${node.expid}`}
           nodeColor={getNodeColor}
-          linkWidth={(link: any) => (link.value || 1) * 3}
+          linkWidth={(link: GraphLink) => (link.value || 1) * 3}
           nodeRelSize={6}
           linkColor={() => "#9ca3af"}
           cooldownTicks={100}
