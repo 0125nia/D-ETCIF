@@ -82,10 +82,11 @@ import { CorrectDetail } from "@/components/teacher";
 export default function Correct() {
   const [experiments, setExperiments] = useState<ExperimentItem[]>([]);
   const [selectedExpId, setSelectedExpId] = useState<number | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loadedExpId, setLoadedExpId] = useState<number | null>(null);
   const [studentList, setStudentList] = useState<StudentExperimentOverview[]>(
     [],
   );
+  const loading = selectedExpId !== null && loadedExpId !== selectedExpId;
 
   const [viewingStudent, setViewingStudent] = useState<number | null>(null);
   useEffect(() => {
@@ -100,12 +101,11 @@ export default function Correct() {
   useEffect(() => {
     if (selectedExpId) {
       // setStudentList(mockStudentResult);
-      setLoading(true);
       getAllStudentResults(selectedExpId)
         .then((res) => {
           setStudentList(res ?? []);
         })
-        .finally(() => setLoading(false));
+        .finally(() => setLoadedExpId(selectedExpId));
     }
   }, [selectedExpId]);
 
@@ -189,6 +189,7 @@ export default function Correct() {
         <div className="fixed inset-0 bg-black/50 z-50 flex justify-end">
           <div className="w-full max-w-2xl bg-white h-full p-6 shadow-2xl animate-in slide-in-from-right">
             <CorrectDetail
+              key={`${viewingStudent}-${selectedExpId}`}
               studentId={viewingStudent}
               experimentId={selectedExpId}
               onClose={() => setViewingStudent(null)}
