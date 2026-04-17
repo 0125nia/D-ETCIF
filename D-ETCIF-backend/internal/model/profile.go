@@ -25,10 +25,10 @@ type CognitiveMapData struct {
 
 // StudyReportData 学习报告
 type StudyReportData struct {
-	TotalTime    int `json:"total_time"`
-	TotalExp     int `json:"total_exp"`
-	ErrorRate    int `json:"error_rate"`
-	AverageScore int `json:"average_score"`
+	TotalTime    int     `json:"total_time"`
+	TotalExp     int     `json:"total_exp"`
+	ErrorRate    float64 `json:"error_rate"`
+	AverageScore float64 `json:"average_score"`
 }
 
 // ResourceRecommendation 推荐资源（方案B新增）
