@@ -1,3 +1,5 @@
+// Package model
+// D-ETCIF-backend/internal/model/profile.go
 package model
 
 // CognitiveMapNode 对应前端认知图谱节点

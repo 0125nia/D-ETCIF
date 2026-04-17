@@ -1,3 +1,5 @@
+// Package types
+// D-ETCIF-frontend/src/types/api.ts
 // 标准API响应类型
 export interface ApiResponse<T> {
   data: T;

@@ -1,3 +1,5 @@
+// Package services
+// D-ETCIF-frontend/src/services/teacher.ts
 import { request } from "@/services/requests";
 import { API } from "./api";
 import type { ExperimentItem } from "@/types/experiment";

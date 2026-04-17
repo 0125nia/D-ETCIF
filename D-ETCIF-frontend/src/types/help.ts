@@ -1,3 +1,5 @@
+// Package types
+// D-ETCIF-frontend/src/types/help.ts
 export interface HelpDetail {
   id: number;
   user_id: number;

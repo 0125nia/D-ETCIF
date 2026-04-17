@@ -1,3 +1,5 @@
+// Package store
+// D-ETCIF-frontend/src/store/time.store.ts
 import { create } from "zustand";
 
 // 单个计时器数据类型

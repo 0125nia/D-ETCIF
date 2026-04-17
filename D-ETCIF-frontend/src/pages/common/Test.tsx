@@ -1,4 +1,6 @@
 // Package common
+// D-ETCIF-frontend/src/pages/common/Test.tsx
+// Package common
 
 import { Dashboard } from "@/pages/teacher";
 

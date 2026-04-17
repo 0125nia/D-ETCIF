@@ -1,3 +1,5 @@
+// Package service
+// D-ETCIF-backend/internal/service/profile.go
 package service
 
 import (

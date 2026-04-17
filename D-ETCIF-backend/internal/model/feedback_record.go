@@ -1,3 +1,5 @@
+// Package model
+// D-ETCIF-backend/internal/model/feedback_record.go
 package model
 
 type FeedbackRecord struct {

@@ -1,3 +1,5 @@
+// Package model
+// D-ETCIF-backend/internal/model/dashboard.go
 package model
 
 // HeatmapItem 知识点掌握热力图项

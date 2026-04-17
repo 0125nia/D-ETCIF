@@ -1,3 +1,5 @@
+// Package types
+// D-ETCIF-frontend/src/types/experimentRes.ts
 // 基础结果模型
 export interface ExperimentReport {
   id: number;
