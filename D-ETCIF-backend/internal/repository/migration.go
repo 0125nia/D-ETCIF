@@ -88,23 +88,23 @@ func MigrateWithData() error {
 		errors = append(errors, err)
 	}
 
-	// 迁移用户实验数据
-	if err := MigrateUserExperiments(cfg.Config.Migrate.ExperimentStagesPath); err != nil {
-		utils.Errorf("迁移用户实验数据失败: %v", err)
-		errors = append(errors, err)
-	}
+	// // 迁移用户实验数据
+	// if err := MigrateUserExperiments(cfg.Config.Migrate.ExperimentStagesPath); err != nil {
+	// 	utils.Errorf("迁移用户实验数据失败: %v", err)
+	// 	errors = append(errors, err)
+	// }
 
-	// 迁移教师端结果与仪表盘初始化数据
-	if err := MigrateTeacherEndpointData(); err != nil {
-		utils.Errorf("迁移教师端初始化数据失败: %v", err)
-		errors = append(errors, err)
-	}
+	// // 迁移教师端结果与仪表盘初始化数据
+	// if err := MigrateTeacherEndpointData(); err != nil {
+	// 	utils.Errorf("迁移教师端初始化数据失败: %v", err)
+	// 	errors = append(errors, err)
+	// }
 
-	// 迁移学生profile数据
-	if err := MigrateProfileData(); err != nil {
-		utils.Errorf("迁移学生profile数据失败: %v", err)
-		errors = append(errors, err)
-	}
+	// // 迁移学生profile数据
+	// if err := MigrateProfileData(); err != nil {
+	// 	utils.Errorf("迁移学生profile数据失败: %v", err)
+	// 	errors = append(errors, err)
+	// }
 
 	// 如果有错误，返回第一个错误
 	if len(errors) > 0 {

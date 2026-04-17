@@ -5,6 +5,7 @@ package controller
 import (
 	"D-ETCIF-backend/internal/model"
 	"D-ETCIF-backend/internal/service"
+	"D-ETCIF-backend/pkg/utils"
 
 	"github.com/gin-gonic/gin"
 )
@@ -21,6 +22,8 @@ func NewIPythonController() *IPythonController {
 
 func (ipc *IPythonController) CollectMsgFromIPython(c *gin.Context) {
 	var log model.ExecutionLog
+
+	utils.Infof("Received ipython execution log: %+v", log)
 
 	if err := c.ShouldBindJSON(&log); err != nil {
 		c.JSON(400, gin.H{"error": "invalid params"})

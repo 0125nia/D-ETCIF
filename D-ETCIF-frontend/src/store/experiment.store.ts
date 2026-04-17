@@ -123,7 +123,6 @@ export const useExperimentStore = create<ExperimentState>((set, get) => ({
         await checkDoingStageDone(currentExperimentId);
 
       if (!can_move) {
-        // 如果后端说不行，可以在这里做点什么，或者把 message 返回出去
         console.warn("未达标原因:", message);
       }
       return can_move;

@@ -31,20 +31,31 @@ func NewProfileController() *ProfileController {
 	}
 }
 
-func (pc *ProfileController) GetCognitiveMap(c *gin.Context) {
+func resolveStudentID(c *gin.Context) (string, string, bool) {
 	studentID, exists := c.Get("userID")
-	var studentIDStr string
 	if !exists {
-		studentIDStr = "test_student" // 容错
-	} else {
-		// 处理 userID 为 int64 类型的情况
-		if idInt, ok := studentID.(int64); ok {
-			studentIDStr = fmt.Sprintf("%d", idInt)
-		} else if idStr, ok := studentID.(string); ok {
-			studentIDStr = idStr
-		} else {
-			studentIDStr = "test_student"
+		return "", "未登录", false
+	}
+	switch id := studentID.(type) {
+	case int64:
+		return fmt.Sprintf("%d", id), "", true
+	case int:
+		return fmt.Sprintf("%d", id), "", true
+	case string:
+		if id == "" {
+			return "", "用户标识为空", false
 		}
+		return id, "", true
+	default:
+		return "", "用户标识类型无效", false
+	}
+}
+
+func (pc *ProfileController) GetCognitiveMap(c *gin.Context) {
+	studentIDStr, reason, ok := resolveStudentID(c)
+	if !ok {
+		utils.Unauthorized(c, reason)
+		return
 	}
 
 	if pc.profileService == nil {
@@ -68,19 +79,10 @@ func (pc *ProfileController) GetCognitiveMap(c *gin.Context) {
 }
 
 func (pc *ProfileController) GetStudyReport(c *gin.Context) {
-	studentID, exists := c.Get("userID")
-	var studentIDStr string
-	if !exists {
-		studentIDStr = "test_student"
-	} else {
-		// 处理 userID 为 int64 类型的情况
-		if idInt, ok := studentID.(int64); ok {
-			studentIDStr = fmt.Sprintf("%d", idInt)
-		} else if idStr, ok := studentID.(string); ok {
-			studentIDStr = idStr
-		} else {
-			studentIDStr = "test_student"
-		}
+	studentIDStr, reason, ok := resolveStudentID(c)
+	if !ok {
+		utils.Unauthorized(c, reason)
+		return
 	}
 
 	data, err := pc.profileService.GetStudyReport(studentIDStr)
@@ -93,19 +95,10 @@ func (pc *ProfileController) GetStudyReport(c *gin.Context) {
 }
 
 func (pc *ProfileController) GetRecommendations(c *gin.Context) {
-	studentID, exists := c.Get("userID")
-	var studentIDStr string
-	if !exists {
-		studentIDStr = "test_student"
-	} else {
-		// 处理 userID 为 int64 类型的情况
-		if idInt, ok := studentID.(int64); ok {
-			studentIDStr = fmt.Sprintf("%d", idInt)
-		} else if idStr, ok := studentID.(string); ok {
-			studentIDStr = idStr
-		} else {
-			studentIDStr = "test_student"
-		}
+	studentIDStr, reason, ok := resolveStudentID(c)
+	if !ok {
+		utils.Unauthorized(c, reason)
+		return
 	}
 	data, err := pc.profileService.GetRecommendations(studentIDStr)
 	if err != nil {
