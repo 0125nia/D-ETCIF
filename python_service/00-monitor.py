@@ -15,7 +15,7 @@ def perform_post(data):
             timeout=1.5
         )
     except:
-        pass 
+        pass
 def send_to_backend(result):
     data = {
         "studentId": student_id,
