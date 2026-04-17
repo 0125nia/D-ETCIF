@@ -3,6 +3,11 @@
 import { useAuthStore, useExperimentStore } from "@/store";
 import { NOTEBOOK_BASE_URL, NOTEBOOK_PATH } from "@/services/api";
 
+const normalizeNotebookPath = (rawPath: string): string => {
+  if (!rawPath) return "";
+  return rawPath.startsWith("/") ? rawPath : `/${rawPath}`;
+};
+
 export default function CodeEditor() {
   const user = useAuthStore((state) => state.user);
   const currentExperimentId = useExperimentStore(
@@ -18,11 +23,7 @@ export default function CodeEditor() {
     experimentId,
   });
   const notebookBase = NOTEBOOK_BASE_URL.replace(/\/$/, "");
-  const notebookPath = NOTEBOOK_PATH
-    ? NOTEBOOK_PATH.startsWith("/")
-      ? NOTEBOOK_PATH
-      : `/${NOTEBOOK_PATH}`
-    : "";
+  const notebookPath = normalizeNotebookPath(NOTEBOOK_PATH);
   const notebookUrl =
     notebookBase && notebookPath
       ? `${notebookBase}${notebookPath}?${params.toString()}`

@@ -207,18 +207,50 @@ func MigrateExperimentData(dataFilePath string) error {
 // inferExperimentContext 按 pre -> doing -> post 的顺序推断实验ID与实验名。
 // 当无法从任何来源推断时，返回 (0, "")。
 func inferExperimentContext(payload experimentDataJSON) (int64, string) {
+	var experimentID int64
+	experimentName := ""
+
 	if len(payload.Pre) > 0 {
-		return payload.Pre[0].ExperimentID, payload.Pre[0].ExperimentName
-	}
-	if len(payload.Doing) > 0 {
-		return payload.Doing[0].ExperimentID, payload.Doing[0].ExperimentName
-	}
-	for _, item := range payload.Post {
-		if item.ExperimentID != 0 || strings.TrimSpace(item.ExperimentName) != "" {
-			return item.ExperimentID, strings.TrimSpace(item.ExperimentName)
+		for _, item := range payload.Pre {
+			if experimentID == 0 && item.ExperimentID != 0 {
+				experimentID = item.ExperimentID
+			}
+			if experimentName == "" && strings.TrimSpace(item.ExperimentName) != "" {
+				experimentName = strings.TrimSpace(item.ExperimentName)
+			}
+			if experimentID != 0 && experimentName != "" {
+				return experimentID, experimentName
+			}
 		}
 	}
-	return 0, ""
+
+	if len(payload.Doing) > 0 {
+		for _, item := range payload.Doing {
+			if experimentID == 0 && item.ExperimentID != 0 {
+				experimentID = item.ExperimentID
+			}
+			if experimentName == "" && strings.TrimSpace(item.ExperimentName) != "" {
+				experimentName = strings.TrimSpace(item.ExperimentName)
+			}
+			if experimentID != 0 && experimentName != "" {
+				return experimentID, experimentName
+			}
+		}
+	}
+
+	for _, item := range payload.Post {
+		if experimentID == 0 && item.ExperimentID != 0 {
+			experimentID = item.ExperimentID
+		}
+		if experimentName == "" && strings.TrimSpace(item.ExperimentName) != "" {
+			experimentName = strings.TrimSpace(item.ExperimentName)
+		}
+		if experimentID != 0 && experimentName != "" {
+			return experimentID, experimentName
+		}
+	}
+
+	return experimentID, experimentName
 }
 
 // userExperimentJSON 用户实验数据JSON结构
