@@ -23,37 +23,6 @@ export default function CorrectDetail({
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    // const mockData: StudentResultDetail = {
-    //   student_id: studentId,
-    //   experiment_id: experimentId,
-    //   operation_result: {
-    //     id: 1,
-    //     user_id: studentId,
-    //     experiment_id: experimentId,
-    //     operation_score: 88.5,
-    //   },
-    //   summary: {
-    //     id: 1,
-    //     user_id: studentId,
-    //     experiment_id: experimentId,
-    //     learning_content:
-    //       "学习了Linux基础命令、文件权限管理、进程查看等内容，掌握了基本的服务器操作。",
-    //     problems_solved:
-    //       "遇到权限不足问题，通过chmod修改权限后解决；网络不通通过ifconfig排查。",
-    //     status: "submitted",
-    //   },
-    //   report: {
-    //     id: 1,
-    //     user_id: studentId,
-    //     experiment_id: experimentId,
-    //     file_name: "实验报告.pdf",
-    //     file_path: "/mock/report.pdf",
-    //     updated_at: Math.floor(Date.now() / 1000) - 3600,
-    //     status: 1,
-    //   },
-    // };
-    // setDetail(mockData);
-    // setLoading(true);
     getStudentResultDetail(studentId, experimentId)
       .then((res) => {
         setDetail(res);
@@ -77,7 +46,6 @@ export default function CorrectDetail({
   const handleSubmitAssessment = async () => {
     setSubmitting(true);
     try {
-      // 模拟调用：await submitAssessment({ studentId, experimentId, score, comment });
       alert("提交批阅成功！");
       onClose(); // 提交后关闭详情
     } catch (e) {

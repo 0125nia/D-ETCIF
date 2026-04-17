@@ -12,7 +12,7 @@ from app.core.paths import NODE2VEC_MODEL_PATH, ensure_parent
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 
-def build_graph(neo4j_url="bolt://localhost:7687", neo4j_auth=('neo4j', 'password')):
+def build_graph(neo4j_url, neo4j_auth):
 
     try:
         logging.info("开始从Neo4j构建图结构...")
@@ -202,13 +202,16 @@ def generate_recommendations(model, node_type, weak_kps, topk=3):
 
 
 class Node2VecAnalyzer:
-    def __init__(self, neo4j_url="bolt://localhost:7687", neo4j_auth=None, model_path=None):
+    def __init__(self, neo4j_url=None, neo4j_auth=None, model_path=None):
+        if not neo4j_url:
+            raise ValueError("NEO4J_URI is required")
         self.neo4j_url = neo4j_url
         if neo4j_auth is None:
-            self.neo4j_auth = (
-                os.getenv("NEO4J_USER", "neo4j"),
-                os.getenv("NEO4J_PASSWORD", "password"),
-            )
+            neo4j_user = os.getenv("NEO4J_USER")
+            neo4j_password = os.getenv("NEO4J_PASSWORD")
+            if not neo4j_user or not neo4j_password:
+                raise ValueError("NEO4J_USER and NEO4J_PASSWORD are required")
+            self.neo4j_auth = (neo4j_user, neo4j_password)
         else:
             self.neo4j_auth = neo4j_auth
         self.model_path = model_path or str(NODE2VEC_MODEL_PATH)
@@ -253,7 +256,16 @@ class Node2VecAnalyzer:
 
 
 if __name__ == "__main__":
-    analyzer = Node2VecAnalyzer(neo4j_url="bolt://localhost:7687")
+    neo4j_uri = os.getenv("NEO4J_URI")
+    neo4j_user = os.getenv("NEO4J_USER")
+    neo4j_password = os.getenv("NEO4J_PASSWORD")
+    if not neo4j_uri or not neo4j_user or not neo4j_password:
+        raise SystemExit("Missing required env: NEO4J_URI, NEO4J_USER, NEO4J_PASSWORD")
+
+    analyzer = Node2VecAnalyzer(
+        neo4j_url=neo4j_uri,
+        neo4j_auth=(neo4j_user, neo4j_password),
+    )
     
     # 2. 构建图（从Neo4j拉取训练数据）
     analyzer.build_graph()

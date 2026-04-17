@@ -11,10 +11,16 @@ from app.core.paths import ENV_FILE, NODE2VEC_MODEL_PATH
 # 加载环境变量
 load_dotenv(dotenv_path=ENV_FILE)
 
+def _require_env(name: str) -> str:
+    value = os.getenv(name)
+    if not value:
+        raise RuntimeError(f"Missing required environment variable: {name}")
+    return value
+
 # 初始化Node2Vec分析器
-neo4j_url = os.getenv("NEO4J_URI", "bolt://localhost:7687")
-neo4j_user = os.getenv("NEO4J_USER", "neo4j")
-neo4j_password = os.getenv("NEO4J_PASSWORD", "password")
+neo4j_url = _require_env("NEO4J_URI")
+neo4j_user = _require_env("NEO4J_USER")
+neo4j_password = _require_env("NEO4J_PASSWORD")
 
 analyzer = Node2VecAnalyzer(
     neo4j_url=neo4j_url,

@@ -6,9 +6,11 @@ from app.core.paths import ENV_FILE, EXPERIMENT_GRAPH_BOOTSTRAP_FILE
 
 load_dotenv(dotenv_path=ENV_FILE, override=True)
 
-NEO4J_URI = os.getenv("NEO4J_URI", "bolt://localhost:7687")
-NEO4J_USER = os.getenv("NEO4J_USER", "neo4j")
-NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD", "password")
+NEO4J_URI = os.getenv("NEO4J_URI")
+NEO4J_USER = os.getenv("NEO4J_USER")
+NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD")
+if not NEO4J_URI or not NEO4J_USER or not NEO4J_PASSWORD:
+    raise RuntimeError("Missing required env: NEO4J_URI, NEO4J_USER, NEO4J_PASSWORD")
 
 # 连接数据库
 graph = Graph(NEO4J_URI, auth=(NEO4J_USER, NEO4J_PASSWORD))

@@ -8,77 +8,6 @@ import type { StudentExperimentOverview } from "@/types/experimentRes";
 import type { ExperimentItem } from "@/types/experiment";
 import { CorrectDetail } from "@/components/teacher";
 
-// const mockExpList: ExperimentItem[] = [
-//   {
-//     id: 1,
-//     experiment_id: 1,
-//     name: "实验一：系统环境配置",
-//     desc: "",
-//     difficulty: 1,
-//   },
-//   {
-//     id: 2,
-//     experiment_id: 2,
-//     name: "实验二：基础操作实践",
-//     desc: "",
-//     difficulty: 2,
-//   },
-//   {
-//     id: 3,
-//     experiment_id: 3,
-//     name: "实验三：综合设计",
-//     desc: "",
-//     difficulty: 3,
-//   },
-// ];
-
-// const mockStudentResult: StudentExperimentOverview[] = [
-//   {
-//     user_id: 1001,
-//     username: "张三",
-//     experiment_id: 1,
-//     current_stage: 1,
-//     operation_score: 0,
-//     summary_status: "empty",
-//     has_report: false,
-//   },
-//   {
-//     user_id: 1002,
-//     username: "李四",
-//     experiment_id: 1,
-//     current_stage: 2,
-//     operation_score: 66,
-//     summary_status: "draft",
-//     has_report: true,
-//   },
-//   {
-//     user_id: 1003,
-//     username: "王五",
-//     experiment_id: 1,
-//     current_stage: 3,
-//     operation_score: 89.5,
-//     summary_status: "submitted",
-//     has_report: true,
-//   },
-//   {
-//     user_id: 1004,
-//     username: "赵六",
-//     experiment_id: 1,
-//     current_stage: 3,
-//     operation_score: 92,
-//     summary_status: "submitted",
-//     has_report: true,
-//   },
-//   {
-//     user_id: 1005,
-//     username: "钱七",
-//     experiment_id: 1,
-//     current_stage: 2,
-//     operation_score: 75,
-//     summary_status: "draft",
-//     has_report: false,
-//   },
-// ];
 export default function Correct() {
   const [experiments, setExperiments] = useState<ExperimentItem[]>([]);
   const [selectedExpId, setSelectedExpId] = useState<number | null>(null);
@@ -100,7 +29,6 @@ export default function Correct() {
 
   useEffect(() => {
     if (selectedExpId) {
-      // setStudentList(mockStudentResult);
       getAllStudentResults(selectedExpId)
         .then((res) => {
           setStudentList(res ?? []);

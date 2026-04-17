@@ -13,9 +13,11 @@ class KGBuilder:
                  user=None,
                  password=None):
 
-        uri = uri or os.getenv("NEO4J_URI", "bolt://localhost:7687")
-        user = user or os.getenv("NEO4J_USER", "neo4j")
-        password = password or os.getenv("NEO4J_PASSWORD", "password")
+        uri = uri or os.getenv("NEO4J_URI")
+        user = user or os.getenv("NEO4J_USER")
+        password = password or os.getenv("NEO4J_PASSWORD")
+        if not uri or not user or not password:
+            raise ValueError("NEO4J_URI, NEO4J_USER, NEO4J_PASSWORD are required")
 
         self.graph = Graph(uri, auth=(user, password))
 

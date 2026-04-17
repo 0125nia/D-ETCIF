@@ -7,14 +7,17 @@ query = os.environ.get('QUERY_STRING', '')
 params = urllib.parse.parse_qs(query)
 student_id = params.get('studentId', [''])[0]
 experiment_id = params.get('experimentId', [''])[0]
+collect_url = os.environ.get('MONITOR_COLLECT_URL', '').strip()
 def perform_post(data):
+    if not collect_url:
+        return
     try:
         requests.post(
-            "http://localhost:4000/api/v1/monitor/collect",
+            collect_url,
             json=data,
             timeout=1.5
         )
-    except:
+    except Exception:
         pass
 def send_to_backend(result):
     data = {
@@ -32,6 +35,6 @@ ip = get_ipython()
 if ip:
     try:
         ip.events.unregister('post_run_cell', send_to_backend)
-    except:
+    except Exception:
         pass
     ip.events.register('post_run_cell', send_to_backend)
