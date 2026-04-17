@@ -20,6 +20,11 @@ type DashboardService struct {
 
 var dashboardMasteryRelTypes = []string{"MASTERED", "掌握", "CONFIDENCE", "置信", "WEIGHT", "权重"}
 
+const (
+	engagementMidEventsScale = 4.0
+	sentinelMasteryHigh      = 2.0
+)
+
 func NewDashboardService(db *gorm.DB, neo4jDriver neo4j.DriverWithContext) *DashboardService {
 	return &DashboardService{
 		db:          db,
@@ -123,7 +128,7 @@ func (s *DashboardService) GetBehaviorData() (*model.BehaviorData, error) {
 		Row().
 		Scan(&avgPostQuiz)
 
-	engagement := clampPercent((float64(totalMid) / float64(studentCount)) * 4) // 人均25次约100分
+	engagement := clampPercent((float64(totalMid) / float64(studentCount)) * engagementMidEventsScale) // 人均25次约100分
 	toolUsage := normalizeToPercent(avgOperation)
 	codeNorm := 0.0
 	logic := 0.0
@@ -197,7 +202,7 @@ func (s *DashboardService) GetWarningData(ctx context.Context) (*model.WarningDa
 			 collect({kp: toString(coalesce(kp.name, kp.kp_name, kp.id, kp.kp_id)), mastery: norm_mastery}) AS items,
 			 avg(norm_mastery) AS avg_mastery
 		WITH s, avg_mastery,
-			 reduce(minItem = {kp: '未知知识点', mastery: 2.0}, item IN items |
+			 reduce(minItem = {kp: '未知知识点', mastery: $sentinelMasteryHigh}, item IN items |
 				CASE WHEN item.mastery < minItem.mastery THEN item ELSE minItem END) AS weakest
 		RETURN toString(coalesce(s.name, s.student_name, s.id)) AS student_name,
 			   weakest.kp AS weakest_kp,
@@ -206,7 +211,8 @@ func (s *DashboardService) GetWarningData(ctx context.Context) (*model.WarningDa
 		LIMIT 5
 		`
 		result, neoErr := session.Run(ctx, query, map[string]interface{}{
-			"relTypes": dashboardMasteryRelTypes,
+			"relTypes":            dashboardMasteryRelTypes,
+			"sentinelMasteryHigh": sentinelMasteryHigh,
 		})
 		if neoErr == nil {
 			for result.Next(ctx) {

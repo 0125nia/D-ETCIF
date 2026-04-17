@@ -6,7 +6,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"math"
 	"net/http"
@@ -212,12 +211,7 @@ func (s *ProfileService) GetStudyReport(studentID string) (*model.StudyReportDat
 	}
 
 	// 2. 统计学习实验数（experiments 表优先）
-	var userIDInt int64
-	parseUserErr := errors.New("student id parse error")
-	if parsed, parseErr := strconv.ParseInt(strings.TrimSpace(studentID), 10, 64); parseErr == nil {
-		userIDInt = parsed
-		parseUserErr = nil
-	}
+	userIDInt, parseUserErr := strconv.ParseInt(strings.TrimSpace(studentID), 10, 64)
 	if parseUserErr == nil {
 		var count int64
 		err = s.db.Model(&model.Experiment{}).Where("user_id = ?", userIDInt).Count(&count).Error
