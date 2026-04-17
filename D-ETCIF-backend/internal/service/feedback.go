@@ -49,8 +49,8 @@ func (fs *FeedbackService) HandleBehaviorEvent(event *model.BehaviorEvent) {
 		fs.StrategyFeedback(log, event)
 	case model.BehaviorKindMidEvent:
 		utils.Info("Handling MidEvent event")
-		cellContent := stringifyPayload(event.Payload["content"])
-		if strings.TrimSpace(cellContent) == "" {
+		content := stringifyPayload(event.Payload["content"])
+		if strings.TrimSpace(content) == "" {
 			utils.Info("No cell content in MidEvent")
 			return
 		}
@@ -70,7 +70,7 @@ func (fs *FeedbackService) HandleBehaviorEvent(event *model.BehaviorEvent) {
 		log := &model.ExecutionLog{
 			StudentID:    event.StudentID,
 			ExperimentID: event.ExperimentID,
-			CellContent:  cellContent,
+			CellContent:  content,
 			Error:        errorText,
 			Success:      success,
 		}

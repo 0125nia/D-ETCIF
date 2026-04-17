@@ -204,6 +204,8 @@ func MigrateExperimentData(dataFilePath string) error {
 	return nil
 }
 
+// inferExperimentContext 按 pre -> doing -> post 的顺序推断实验ID与实验名。
+// 当无法从任何来源推断时，返回 (0, "")。
 func inferExperimentContext(payload experimentDataJSON) (int64, string) {
 	if len(payload.Pre) > 0 {
 		return payload.Pre[0].ExperimentID, payload.Pre[0].ExperimentName
