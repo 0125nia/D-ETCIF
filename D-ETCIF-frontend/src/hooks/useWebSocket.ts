@@ -27,7 +27,7 @@ export const useWebSocket = () => {
 
     socket.onopen = () => {
       console.log(
-        `[D-ETCIF] 实时评价通道已开启: Student ${userName ?? "unknown"}`,
+        `[D-ETCIF] 实时评价通道已开启: Student ${userName ?? `#${userId}`}`,
       );
     };
 

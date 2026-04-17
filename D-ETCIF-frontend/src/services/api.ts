@@ -2,6 +2,8 @@
 
 // D-ETCIF-frontend/src/services/api.ts
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+export const NOTEBOOK_BASE_URL = String(import.meta.env.VITE_NOTEBOOK_BASE_URL || "").trim();
+export const NOTEBOOK_PATH = String(import.meta.env.VITE_NOTEBOOK_PATH || "").trim();
 
 export const API = {
   login: "/api/auth/login",

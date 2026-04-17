@@ -14,7 +14,9 @@ export default function PreStagePage() {
   const currentExperimentId = useExperimentStore((s) => s.currentExperimentId);
   const selectedResourceRef = useRef<ResourceItem | null>(null);
 
-  const timerName = `pre_resource_${currentExperimentId ?? "unknown"}`;
+  const timerName = currentExperimentId
+    ? `pre_resource_${currentExperimentId}`
+    : "pre_resource";
 
   useEffect(() => {
     selectedResourceRef.current = selectedResource;

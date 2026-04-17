@@ -33,23 +33,20 @@ func (fs *FeedbackService) HandleBehaviorEvent(event *model.BehaviorEvent) {
 	switch event.Kind {
 	case model.BehaviorKindExecutionLog:
 		utils.Info("Handling ExecutionLog event")
-		if log, ok := event.Payload["execution_log"].(*model.ExecutionLog); ok && log != nil {
-			utils.Info("Found execution_log in payload")
-			fs.RealtimeFeedback(log, event)
-			fs.StrategyFeedback(log, event)
+		log, ok := event.Payload["execution_log"].(*model.ExecutionLog)
+		if !ok || log == nil {
+			utils.Info("ExecutionLog payload missing, skip feedback dispatch")
 			return
 		}
-
-		fallbackLog := &model.ExecutionLog{
-			StudentID:    event.StudentID,
-			ExperimentID: event.ExperimentID,
-			CellContent:  stringifyPayload(event.Payload["cell_content"]),
-			Error:        stringifyPayload(event.Payload["error"]),
-			Success:      boolFromPayload(event.Payload["success"]),
+		if log.StudentID == "" {
+			log.StudentID = event.StudentID
 		}
-		utils.Info("Created fallback execution log")
-		fs.RealtimeFeedback(fallbackLog, event)
-		fs.StrategyFeedback(fallbackLog, event)
+		if log.ExperimentID == "" {
+			log.ExperimentID = event.ExperimentID
+		}
+		utils.Info("Found execution_log in payload")
+		fs.RealtimeFeedback(log, event)
+		fs.StrategyFeedback(log, event)
 	case model.BehaviorKindMidEvent:
 		utils.Info("Handling MidEvent event")
 		cellContent := stringifyPayload(event.Payload["content"])

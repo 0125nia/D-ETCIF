@@ -40,7 +40,7 @@ const handleTrackerResponse = (
 ) => {
   const payload = (res.data ?? {}) as TrackerResponse;
   if (payload.accepted === false) {
-    const reason = payload.reason || payload.message || "unknown";
+    const reason = payload.reason || payload.message || "unspecified";
     console.warn(`[tracker:${kind}] event dropped`, { reason, payload });
 
     const now = Date.now();
